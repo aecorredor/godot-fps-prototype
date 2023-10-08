@@ -1,7 +1,5 @@
 extends CharacterBody3D
 
-
-const player_height = 1.8
 const crouch_depth = 0.5
 const walking_speed = 5.0
 const sprinting_speed = 8.5
@@ -15,8 +13,10 @@ var prev_speed = current_speed
 var direction = Vector3.ZERO
 var is_crouching = false
 var is_jumping = false
+var is_free_looking = false
 
-@onready var head = $head
+@onready var neck = $neck
+@onready var head = $neck/head
 @onready var standing_collision_shape = $standing_collision_shape
 @onready var crouching_collision_shape = $crouching_collision_shape
 @onready var ray_cast_3d = $RayCast3D
@@ -25,8 +25,8 @@ var is_jumping = false
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 
 func handle_crouch(lerp_modifier: float): 
-	var crouched_height = lerp(head.position.y, player_height - crouch_depth, lerp_modifier)
-	var standing_height = lerp(head.position.y, player_height, lerp_modifier)
+	var crouched_height = lerp(head.position.y, -crouch_depth, lerp_modifier)
+	var standing_height = lerp(head.position.y, 0.0, lerp_modifier)
 	head.position.y = crouched_height  if is_crouching else standing_height
 	standing_collision_shape.disabled = is_crouching
 	crouching_collision_shape.disabled = !is_crouching
@@ -48,12 +48,28 @@ func handle_airtime():
 	else:
 		current_speed = prev_speed
 		
+func handle_free_look(lerp_modifier: float):
+	if (Input.is_action_pressed("free_look")):
+		is_free_looking = true
+	else:
+		is_free_looking = false
+		neck.rotation.y = lerp(neck.rotation.y, 0.0, lerp_modifier)
+		head.rotation.x = lerp(head.rotation.x, 0.0, lerp_modifier)
+
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-	
+
 func _input(event):
 	if event is InputEventMouseMotion:
-		rotate_y(deg_to_rad(-event.relative.x * mouse_sensitivity))
+		var main_rotation = deg_to_rad(-event.relative.x * mouse_sensitivity)
+		if (is_free_looking):  
+			neck.rotate_y(main_rotation)
+			neck.rotation.y = clamp(neck.rotation.y, deg_to_rad(-115), deg_to_rad(115))
+		else:
+			# This changes the player direction. (rotates the actual body).
+			rotate_y(main_rotation)
+		
+		# This rotates the player camera view.
 		head.rotate_x(deg_to_rad(-event.relative.y * mouse_sensitivity))
 		head.rotation.x = clamp(head.rotation.x, deg_to_rad(-75), deg_to_rad(75))
 		
@@ -65,11 +81,13 @@ func _input(event):
 		is_crouching = false
 		velocity.y = jump_velocity
 
+		
 func _physics_process(delta):
 	handle_sprint()
 	var lerp_modifier = delta * lerp_speed
 	handle_crouch(lerp_modifier)
 	handle_airtime()
+	handle_free_look(lerp_modifier)
 	
 	# Add the gravity.
 	if not is_on_floor():

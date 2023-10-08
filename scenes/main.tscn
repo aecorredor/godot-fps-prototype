@@ -61,10 +61,12 @@ shape = SubResource("CapsuleShape3D_grxeo")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0185027, 0.641925, -0.0258002)
 shape = SubResource("CapsuleShape3D_xhavp")
 
-[node name="head" type="Node3D" parent="player"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0265617, 1.8, -0.0280905)
-
-[node name="Camera3D" type="Camera3D" parent="player/head"]
-
 [node name="RayCast3D" type="RayCast3D" parent="player"]
 target_position = Vector3(0, 2, 0)
+
+[node name="neck" type="Node3D" parent="player"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08165e-12, 1.8, 2.08165e-12)
+
+[node name="head" type="Node3D" parent="player/neck"]
+
+[node name="Camera3D" type="Camera3D" parent="player/neck/head"]
