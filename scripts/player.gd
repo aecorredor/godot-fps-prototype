@@ -8,6 +8,7 @@ const crouch_speed = 2.0
 const jump_velocity = 4.5
 const mouse_sensitivity = 0.25
 const lerp_speed = 10.0
+const free_look_tilt_amount = 8
 var current_speed = walking_speed
 var prev_speed = current_speed
 var direction = Vector3.ZERO
@@ -20,7 +21,7 @@ var is_free_looking = false
 @onready var standing_collision_shape = $standing_collision_shape
 @onready var crouching_collision_shape = $crouching_collision_shape
 @onready var ray_cast_3d = $RayCast3D
-
+@onready var camera_3d = $neck/head/Camera3D
 # Get the gravity from the project settings to be synced with RigidBody nodes.
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 
@@ -51,10 +52,14 @@ func handle_airtime():
 func handle_free_look(lerp_modifier: float):
 	if (Input.is_action_pressed("free_look")):
 		is_free_looking = true
+		camera_3d.rotation.z = -deg_to_rad(neck.rotation.y * free_look_tilt_amount)
 	else:
+		if (is_free_looking):
+			head.rotation.x = lerp(head.rotation.x, 0.0, lerp_modifier)
+			
 		is_free_looking = false
 		neck.rotation.y = lerp(neck.rotation.y, 0.0, lerp_modifier)
-		head.rotation.x = lerp(head.rotation.x, 0.0, lerp_modifier)
+		camera_3d.rotation.z = lerp(camera_3d.rotation.z, 0.0, lerp_modifier)
 
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)

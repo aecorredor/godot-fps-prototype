@@ -55,13 +55,16 @@ script = ExtResource("3_lynwq")
 
 [node name="standing_collision_shape" type="CollisionShape3D" parent="player"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0185027, 0.984864, -0.0258002)
+visible = false
 shape = SubResource("CapsuleShape3D_grxeo")
 
 [node name="crouching_collision_shape" type="CollisionShape3D" parent="player"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0185027, 0.641925, -0.0258002)
+visible = false
 shape = SubResource("CapsuleShape3D_xhavp")
 
 [node name="RayCast3D" type="RayCast3D" parent="player"]
+visible = false
 target_position = Vector3(0, 2, 0)
 
 [node name="neck" type="Node3D" parent="player"]
