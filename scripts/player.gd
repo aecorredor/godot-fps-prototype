@@ -10,31 +10,43 @@ const free_look_tilt_amount = 8
 const crouch_depth = 0.5
 const crouch_sprint_speed = 4.0
 const crouch_walk_speed = 2.0
-const prone_depth = 1.0
+const prone_depth = 1.2
 const prone_speed = 1.0
 
-# Head bobbing
-const head_bobbing_walk_speed = 14.0
-const head_bobbing_sprint_speed = 22.0
-const head_bobbing_crouch_walk_speed = 10.0
-const head_bobbing_crouch_sprint_speed = 12.0
-const head_bobbing_walk_intensity = 0.1
-const head_bobbing_sprint_intensity = 0.2
-const head_bobbing_crouch_walk_intensity = 0.05
-const head_bobbing_crouch_sprint_intensity = 0.075
+enum CharacterPose {
+	Standing,
+	Crouching,
+	Proning
+}
+
+var HeadBobbingSpeed = {
+	prone = 5.0,
+	crouch_walk = 10.0,
+	walk = 14.0,
+	crouch_sprint = 12.0,
+	sprint = 22.0
+}
+
+var HeadBobbingIntensity = {
+	prone = 0.1,
+	crouch_walk = 0.05,
+	walk = 0.1,
+	crouch_sprint = 0.075,
+	sprint = 0.2
+}
 
 # Stateful
 var current_speed = walk_speed
 var prev_speed = current_speed
 var direction = Vector3.ZERO
-var is_crouching = false
-var is_proning = false
 var is_jumping = false
 var is_free_looking = false
 var head_bobbing_vector = Vector2.ZERO
 var head_bobbing_index = 0.0
 var head_bobbing_current_intensity = 0.0
 var last_velocity = Vector3.ZERO
+var character_current_pose: CharacterPose = CharacterPose.Standing
+var character_prev_pose: CharacterPose = character_current_pose
 
 @onready var neck = $neck
 @onready var head = $neck/head
@@ -51,37 +63,52 @@ var last_velocity = Vector3.ZERO
 # Get the gravity from the project settings to be synced with RigidBody nodes.
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 
-func toggle_crouch(lerp_modifier: float):
+func set_char_pose(new_pose: CharacterPose):
+	character_prev_pose = character_current_pose
+	character_current_pose = new_pose
+
+func handle_pose_change(lerp_modifier: float):
+	var prone_height = lerp(head.position.y, -prone_depth, lerp_modifier)
 	var crouch_height = lerp(head.position.y, -crouch_depth, lerp_modifier)
 	var standing_height = lerp(head.position.y, 0.0, lerp_modifier)
-	head.position.y = crouch_height if is_crouching else standing_height
-	standing_collision_shape.disabled = is_crouching
-	crouching_collision_shape.disabled = !is_crouching
-	
-func toggle_prone(lerp_modifier: float): 
-	var prone_height = lerp(head.position.y, -prone_depth, lerp_modifier)
-	var standing_height = lerp(head.position.y, 0.0, lerp_modifier)
-	head.position.y = prone_height if is_proning else standing_height
-	standing_collision_shape.disabled = is_proning
-	prone_collision_shape.disabled = !is_proning
-	
+
+	match character_current_pose:
+		CharacterPose.Proning:
+			head.position.y = prone_height
+			prone_collision_shape.disabled = false
+			crouching_collision_shape.disabled = true
+			standing_collision_shape.disabled = true
+		CharacterPose.Crouching:
+			head.position.y = crouch_height
+			prone_collision_shape.disabled = true
+			crouching_collision_shape.disabled = false
+			standing_collision_shape.disabled = true
+		CharacterPose.Standing:
+			head.position.y = standing_height
+			prone_collision_shape.disabled = true
+			crouching_collision_shape.disabled = true
+			standing_collision_shape.disabled = false
+
 func handle_movement(delta: float, lerp_modifier: float, input_dir: Vector2):
-	if (is_proning):
+	var is_proning = character_current_pose == CharacterPose.Proning
+	var is_crouching = character_current_pose == CharacterPose.Crouching
+	
+	if (character_current_pose == CharacterPose.Proning):
 		current_speed = prone_speed
-		head_bobbing_current_intensity = head_bobbing_crouch_walk_intensity if is_crouching else head_bobbing_walk_intensity
-		head_bobbing_index += head_bobbing_crouch_walk_speed * delta if is_crouching else head_bobbing_walk_speed * delta
+		head_bobbing_current_intensity = HeadBobbingIntensity.prone 
+		head_bobbing_index += HeadBobbingSpeed.prone * delta 
 	elif (Input.is_action_pressed("sprint")):
 		if (is_on_floor()):
 			current_speed = crouch_sprint_speed if is_crouching else sprint_speed
-			head_bobbing_current_intensity = head_bobbing_crouch_sprint_intensity if is_crouching else head_bobbing_sprint_intensity
-			head_bobbing_index += head_bobbing_crouch_sprint_speed * delta if is_crouching else head_bobbing_sprint_speed * delta
+			head_bobbing_current_intensity = HeadBobbingIntensity.crouch_sprint if is_crouching else HeadBobbingIntensity.sprint
+			head_bobbing_index += HeadBobbingSpeed.crouch_sprint * delta if is_crouching else HeadBobbingSpeed.sprint * delta
 		else: 
 			# Don't let the player start sprinting while in the air.
 			current_speed = prev_speed
 	else:
 		current_speed = crouch_walk_speed if is_crouching else walk_speed	
-		head_bobbing_current_intensity = head_bobbing_crouch_walk_intensity if is_crouching else head_bobbing_walk_intensity
-		head_bobbing_index += head_bobbing_crouch_walk_speed * delta if is_crouching else head_bobbing_walk_speed * delta
+		head_bobbing_current_intensity = HeadBobbingIntensity.crouch_walk if is_crouching else HeadBobbingIntensity.walk
+		head_bobbing_index += HeadBobbingSpeed.crouch_walk * delta if is_crouching else HeadBobbingSpeed.walk * delta
 		
 	if (is_on_floor() && input_dir != Vector2.ZERO):
 		head_bobbing_vector.y = sin(head_bobbing_index)
@@ -129,15 +156,24 @@ func _input(event):
 		head.rotation.x = clamp(head.rotation.x, deg_to_rad(-75), deg_to_rad(75))
 		
 	if (Input.is_action_just_pressed("crouch") && is_on_floor()):
-		if (is_proning || standing_ray_cast.is_colliding()): return
-		is_crouching = !is_crouching
+		if (character_current_pose == CharacterPose.Crouching && standing_ray_cast.is_colliding()): return
+		set_char_pose(CharacterPose.Crouching if character_current_pose != CharacterPose.Crouching else CharacterPose.Standing)
 		
 	if (Input.is_action_just_pressed("prone") && is_on_floor()):
-		var prone_blocked = proning_ray_cast.is_colliding();
-		is_proning = false if is_proning else !prone_blocked
-		
+		match character_current_pose:
+			CharacterPose.Proning:
+				if (character_prev_pose == CharacterPose.Crouching && !crouching_ray_cast.is_colliding()):
+					set_char_pose(CharacterPose.Crouching)
+				elif (!standing_ray_cast.is_colliding()):
+					set_char_pose(CharacterPose.Standing)
+				elif (!crouching_ray_cast.is_colliding()):
+					set_char_pose(CharacterPose.Crouching)
+			_:
+				if (!proning_ray_cast.is_colliding()):
+					set_char_pose(CharacterPose.Proning)
+
 	if (Input.is_action_just_pressed("ui_accept") && !standing_ray_cast.is_colliding() && is_on_floor()):
-		is_crouching = false
+		set_char_pose(CharacterPose.Standing)
 		velocity.y = jump_velocity
 		animation_player.play("jump")
 
@@ -151,8 +187,7 @@ func _physics_process(delta):
 		velocity.y -= gravity * delta
 	
 	handle_movement(delta, lerp_modifier, input_dir)	
-	toggle_crouch(lerp_modifier)
-	toggle_prone(lerp_modifier)
+	handle_pose_change(lerp_modifier)
 	handle_free_look(lerp_modifier)
 	
 	# Get the input direction and handle the movement/deceleration.
