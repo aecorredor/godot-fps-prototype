@@ -33,6 +33,7 @@ var is_free_looking = false
 var head_bobbing_vector = Vector2.ZERO
 var head_bobbing_index = 0.0
 var head_bobbing_current_intensity = 0.0
+var last_velocity = Vector3.ZERO
 
 @onready var neck = $neck
 @onready var head = $neck/head
@@ -41,6 +42,7 @@ var head_bobbing_current_intensity = 0.0
 @onready var standing_collision_shape = $standing_collision_shape
 @onready var crouching_collision_shape = $crouching_collision_shape
 @onready var ray_cast_3d = $RayCast3D
+@onready var animation_player = $neck/head/eyes/AnimationPlayer
 
 # Get the gravity from the project settings to be synced with RigidBody nodes.
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
@@ -119,6 +121,7 @@ func _input(event):
 	if (Input.is_action_just_pressed("ui_accept") and !ray_cast_3d.is_colliding() and is_on_floor()):
 		is_crouching = false
 		velocity.y = jump_velocity
+		animation_player.play("jump")
 
 		
 func _physics_process(delta):
@@ -135,9 +138,12 @@ func _physics_process(delta):
 	handle_free_look(lerp_modifier)
 	
 	# Get the input direction and handle the movement/deceleration.
-	# As good practice, you should replace UI actions with custom gameplay actions.
-	
-	direction = lerp(direction, (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized(), lerp_modifier)
+	# Don't let the player change directions while in the air.
+	if (is_on_floor()):
+		direction = lerp(direction, (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized(), lerp_modifier)
+		if last_velocity.y < 0.0:
+			animation_player.play('land')
+			
 	if direction:
 		velocity.x = direction.x * current_speed
 		velocity.z = direction.z * current_speed
@@ -145,4 +151,5 @@ func _physics_process(delta):
 		velocity.x = move_toward(velocity.x, 0, current_speed)
 		velocity.z = move_toward(velocity.z, 0, current_speed)
 
+	last_velocity = velocity
 	move_and_slide()
