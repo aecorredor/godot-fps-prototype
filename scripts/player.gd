@@ -51,14 +51,14 @@ var last_velocity = Vector3.ZERO
 # Get the gravity from the project settings to be synced with RigidBody nodes.
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 
-func toggle_crouch(lerp_modifier: float): 
+func toggle_crouch(lerp_modifier: float):
 	var crouch_height = lerp(head.position.y, -crouch_depth, lerp_modifier)
 	var standing_height = lerp(head.position.y, 0.0, lerp_modifier)
 	head.position.y = crouch_height if is_crouching else standing_height
 	standing_collision_shape.disabled = is_crouching
 	crouching_collision_shape.disabled = !is_crouching
 	
-func handle_prone(lerp_modifier: float): 
+func toggle_prone(lerp_modifier: float): 
 	var prone_height = lerp(head.position.y, -prone_depth, lerp_modifier)
 	var standing_height = lerp(head.position.y, 0.0, lerp_modifier)
 	head.position.y = prone_height if is_proning else standing_height
@@ -128,10 +128,11 @@ func _input(event):
 		head.rotate_x(deg_to_rad(-event.relative.y * mouse_sensitivity))
 		head.rotation.x = clamp(head.rotation.x, deg_to_rad(-75), deg_to_rad(75))
 		
-	if (Input.is_action_just_pressed("crouch") && !is_proning && !standing_ray_cast.is_colliding() && is_on_floor()):
+	if (Input.is_action_just_pressed("crouch") && is_on_floor()):
+		if (is_proning || standing_ray_cast.is_colliding()): return
 		is_crouching = !is_crouching
-	
-	if (Input.is_action_just_pressed("prone")):
+		
+	if (Input.is_action_just_pressed("prone") && is_on_floor()):
 		var prone_blocked = proning_ray_cast.is_colliding();
 		is_proning = false if is_proning else !prone_blocked
 		
@@ -151,6 +152,7 @@ func _physics_process(delta):
 	
 	handle_movement(delta, lerp_modifier, input_dir)	
 	toggle_crouch(lerp_modifier)
+	toggle_prone(lerp_modifier)
 	handle_free_look(lerp_modifier)
 	
 	# Get the input direction and handle the movement/deceleration.
