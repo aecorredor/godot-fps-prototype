@@ -1,12 +1,16 @@
-[gd_scene load_steps=15 format=3 uid="uid://6lfxgh1a5ttb"]
+[gd_scene load_steps=17 format=3 uid="uid://6lfxgh1a5ttb"]
 
 [ext_resource type="Texture2D" uid="uid://cuqiq7a8ytr42" path="res://assets/textures/dev/grids/Dark/texture_07.png" id="1_3lxok"]
+[ext_resource type="Texture2D" uid="uid://bmervycdmhjd1" path="res://assets/textures/dev/grids/Orange/texture_05.png" id="2_1b6tv"]
 [ext_resource type="Texture2D" uid="uid://bngjitxkd7vrb" path="res://assets/hdris/kloofendal_48d_partly_cloudy_puresky_2k.hdr" id="2_oxe6r"]
 [ext_resource type="Script" path="res://scripts/player.gd" id="3_lynwq"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mbqsd"]
 albedo_texture = ExtResource("1_3lxok")
 uv1_triplanar = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fxjcc"]
+albedo_texture = ExtResource("2_1b6tv")
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_tjcs2"]
 panorama = ExtResource("2_oxe6r")
@@ -25,8 +29,8 @@ glow_enabled = true
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_xhavp"]
 height = 1.3
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_q4q05"]
-size = Vector3(0.3, 2, 1)
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_ctgwg"]
+radius = 0.3
 
 [sub_resource type="Animation" id="Animation_5bnfe"]
 length = 0.001
@@ -128,11 +132,41 @@ use_collision = true
 size = Vector3(20, 1, 20)
 material = SubResource("StandardMaterial3D_mbqsd")
 
+[node name="CSGBox3D7" type="CSGBox3D" parent="stage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.07953, 0.459877, 8.93837)
+use_collision = true
+size = Vector3(2, 1, 2)
+material = SubResource("StandardMaterial3D_mbqsd")
+
 [node name="CSGBox3D2" type="CSGBox3D" parent="stage"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.081, 2.07613, -0.0407076)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.081, 1.70011, -0.0407076)
+use_collision = true
+size = Vector3(20, 0.2, 20)
+material = SubResource("StandardMaterial3D_mbqsd")
+
+[node name="CSGBox3D5" type="CSGBox3D" parent="stage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.081, 2.07613, 21.7178)
 use_collision = true
 size = Vector3(20, 1, 20)
 material = SubResource("StandardMaterial3D_mbqsd")
+
+[node name="CSGBox3D6" type="CSGBox3D" parent="stage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.34215, -8.3696, 21.7178)
+use_collision = true
+size = Vector3(20, 1, 20)
+material = SubResource("StandardMaterial3D_mbqsd")
+
+[node name="CSGBox3D3" type="CSGBox3D" parent="stage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.57773, 2.85337, 2.916)
+use_collision = true
+size = Vector3(5, 4, 0.1)
+material = SubResource("StandardMaterial3D_fxjcc")
+
+[node name="CSGBox3D4" type="CSGBox3D" parent="stage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.41821, 2.0206, 2.916)
+use_collision = true
+size = Vector3(5, 4, 0.1)
+material = SubResource("StandardMaterial3D_fxjcc")
 
 [node name="env" type="Node3D" parent="."]
 
@@ -155,8 +189,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0185027, 0.641925, -0.0258
 shape = SubResource("CapsuleShape3D_xhavp")
 
 [node name="prone_collision_shape" type="CollisionShape3D" parent="player"]
-transform = Transform3D(9.23116e-11, -0.00211183, -0.999998, -1, -4.37114e-08, -3.48787e-16, -4.37113e-08, 0.999998, -0.00211183, 2.08165e-12, 0.160052, 2.08165e-12)
-shape = SubResource("BoxShape3D_q4q05")
+transform = Transform3D(1.91069e-15, 4.37114e-08, 1, 1, -4.37114e-08, 0, 4.37114e-08, 1, -4.37114e-08, 0, 0.335701, 0)
+shape = SubResource("CapsuleShape3D_ctgwg")
 disabled = true
 
 [node name="standing_ray_cast" type="RayCast3D" parent="player"]
@@ -166,8 +200,8 @@ target_position = Vector3(0, 2, 0)
 target_position = Vector3(2.08165e-12, 1.5, 2.08165e-12)
 
 [node name="proning_ray_cast" type="RayCast3D" parent="player"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08165e-12, 2.08165e-12, -1)
-target_position = Vector3(2.08165e-12, 2.08165e-12, 2)
+transform = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, 2.08165e-12, 0.0287629, 1.00081)
+target_position = Vector3(0, 0, 2.2)
 
 [node name="neck" type="Node3D" parent="player"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08165e-12, 1.8, 2.08165e-12)

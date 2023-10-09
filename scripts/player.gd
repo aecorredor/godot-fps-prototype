@@ -80,17 +80,16 @@ func handle_pose_change(lerp_modifier: float):
 			standing_collision_shape.disabled = true
 		CharacterPose.Crouching:
 			head.position.y = crouch_height
-			prone_collision_shape.disabled = true
 			crouching_collision_shape.disabled = false
+			prone_collision_shape.disabled = true
 			standing_collision_shape.disabled = true
 		CharacterPose.Standing:
 			head.position.y = standing_height
+			standing_collision_shape.disabled = false
 			prone_collision_shape.disabled = true
 			crouching_collision_shape.disabled = true
-			standing_collision_shape.disabled = false
 
 func handle_movement(delta: float, lerp_modifier: float, input_dir: Vector2):
-	var is_proning = character_current_pose == CharacterPose.Proning
 	var is_crouching = character_current_pose == CharacterPose.Crouching
 	
 	if (character_current_pose == CharacterPose.Proning):
@@ -156,8 +155,15 @@ func _input(event):
 		head.rotation.x = clamp(head.rotation.x, deg_to_rad(-75), deg_to_rad(75))
 		
 	if (Input.is_action_just_pressed("crouch") && is_on_floor()):
-		if (character_current_pose == CharacterPose.Crouching && standing_ray_cast.is_colliding()): return
-		set_char_pose(CharacterPose.Crouching if character_current_pose != CharacterPose.Crouching else CharacterPose.Standing)
+		match character_current_pose:
+			CharacterPose.Standing:
+				set_char_pose(CharacterPose.Crouching)
+			CharacterPose.Crouching:
+				if (!standing_ray_cast.is_colliding()):
+					set_char_pose(CharacterPose.Standing)
+			CharacterPose.Proning:
+				if (!crouching_ray_cast.is_colliding()):
+					set_char_pose(CharacterPose.Crouching)
 		
 	if (Input.is_action_just_pressed("prone") && is_on_floor()):
 		match character_current_pose:
