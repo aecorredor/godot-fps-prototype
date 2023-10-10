@@ -288,18 +288,18 @@ public partial class player : CharacterBody3D
 		}
 	}
 
-	public void _PhysicsProcess(float delta)
+	public override void _PhysicsProcess(double delta)
 	{
-		float lerpModifier = delta * lerpSpeed;
+		float lerpModifier = (float)delta * lerpSpeed;
 		Vector2 inputDir = Input.GetVector("left", "right", "forward", "backward");
 
 		// Add the gravity.
 		if (!IsOnFloor())
 		{
-			Velocity = Velocity with { Y = Velocity.Y - ((float)ProjectSettings.GetSetting("physics/3d/default_gravity") * delta) };
+			Velocity = Velocity with { Y = Velocity.Y - ((float)ProjectSettings.GetSetting("physics/3d/default_gravity") * (float)delta) };
 		}
 
-		HandleMovement(delta, lerpModifier, inputDir);
+		HandleMovement((float)delta, lerpModifier, inputDir);
 		HandlePoseChange(lerpModifier);
 		HandleFreeLook(lerpModifier);
 
