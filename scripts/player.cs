@@ -47,34 +47,22 @@ public partial class player : CharacterBody3D
 	private RayCast3D proningRayCast;
 	private AnimationPlayer animationPlayer;
 
-	private float HeadBobbingSpeed(CharacterPose pose)
+	public static class HeadBobbingSpeed
 	{
-		switch (pose)
-		{
-			case CharacterPose.Proning:
-				return 5.0f;
-			case CharacterPose.Crouching:
-				return 10.0f;
-			case CharacterPose.Standing:
-				return 14.0f;
-			default:
-				return 0.0f;
-		}
+		public static readonly float Prone = 5.0f;
+		public static readonly float CrouchWalk = 10.0f;
+		public static readonly float Walk = 14.0f;
+		public static readonly float CrouchSprint = 12.0f;
+		public static readonly float Sprint = 22.0f;
 	}
 
-	private float HeadBobbingIntensity(CharacterPose pose)
+	public static class HeadBobbingIntensity
 	{
-		switch (pose)
-		{
-			case CharacterPose.Proning:
-				return 0.1f;
-			case CharacterPose.Crouching:
-				return 0.05f;
-			case CharacterPose.Standing:
-				return 0.1f;
-			default:
-				return 0.0f;
-		}
+		public static readonly float Prone = 0.1f;
+		public static readonly float CrouchWalk = 0.05f;
+		public static readonly float Walk = 0.1f;
+		public static readonly float CrouchSprint = 0.075f;
+		public static readonly float Sprint = 0.2f;
 	}
 
 	private void SetCharPose(CharacterPose newPose)
@@ -119,16 +107,16 @@ public partial class player : CharacterBody3D
 		if (characterCurrentPose == CharacterPose.Proning)
 		{
 			currentSpeed = proneSpeed;
-			headBobbingCurrentIntensity = HeadBobbingIntensity(CharacterPose.Proning);
-			headBobbingIndex += HeadBobbingSpeed(CharacterPose.Proning) * delta;
+			headBobbingCurrentIntensity = HeadBobbingIntensity.Prone;
+			headBobbingIndex += HeadBobbingSpeed.Prone * delta;
 		}
 		else if (Input.IsActionPressed("sprint"))
 		{
 			if (IsOnFloor())
 			{
 				currentSpeed = isCrouching ? crouchSprintSpeed : sprintSpeed;
-				headBobbingCurrentIntensity = isCrouching ? HeadBobbingIntensity(CharacterPose.Crouching) : HeadBobbingIntensity(CharacterPose.Standing);
-				headBobbingIndex += isCrouching ? HeadBobbingSpeed(CharacterPose.Crouching) * delta : HeadBobbingSpeed(CharacterPose.Standing) * delta;
+				headBobbingCurrentIntensity = isCrouching ? HeadBobbingIntensity.CrouchSprint : HeadBobbingIntensity.Sprint;
+				headBobbingIndex += isCrouching ? HeadBobbingSpeed.CrouchSprint * delta : HeadBobbingSpeed.Sprint * delta;
 			}
 			else
 			{
@@ -139,8 +127,8 @@ public partial class player : CharacterBody3D
 		else
 		{
 			currentSpeed = isCrouching ? crouchWalkSpeed : walkSpeed;
-			headBobbingCurrentIntensity = isCrouching ? HeadBobbingIntensity(CharacterPose.Crouching) : HeadBobbingIntensity(CharacterPose.Standing);
-			headBobbingIndex += isCrouching ? HeadBobbingSpeed(CharacterPose.Crouching) * delta : HeadBobbingSpeed(CharacterPose.Standing) * delta;
+			headBobbingCurrentIntensity = isCrouching ? HeadBobbingIntensity.CrouchWalk : HeadBobbingIntensity.Walk;
+			headBobbingIndex += isCrouching ? HeadBobbingSpeed.CrouchWalk * delta : HeadBobbingSpeed.Walk * delta;
 		}
 
 		if (IsOnFloor() && inputDir != Vector2.Zero)
