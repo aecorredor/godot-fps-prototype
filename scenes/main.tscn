@@ -3,7 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://cuqiq7a8ytr42" path="res://assets/textures/dev/grids/Dark/texture_07.png" id="1_3lxok"]
 [ext_resource type="Texture2D" uid="uid://bmervycdmhjd1" path="res://assets/textures/dev/grids/Orange/texture_05.png" id="2_1b6tv"]
 [ext_resource type="Texture2D" uid="uid://bngjitxkd7vrb" path="res://assets/hdris/kloofendal_48d_partly_cloudy_puresky_2k.hdr" id="2_oxe6r"]
-[ext_resource type="Script" path="res://scripts/player.gd" id="3_lynwq"]
+[ext_resource type="Script" path="res://scripts/player.cs" id="4_jdimn"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mbqsd"]
 albedo_texture = ExtResource("1_3lxok")
@@ -178,7 +178,7 @@ transform = Transform3D(-0.866025, -0.433013, 0.25, 0, 0.5, 0.866025, -0.5, 0.75
 shadow_enabled = true
 
 [node name="player" type="CharacterBody3D" parent="."]
-script = ExtResource("3_lynwq")
+script = ExtResource("4_jdimn")
 
 [node name="standing_collision_shape" type="CollisionShape3D" parent="player"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0185027, 0.984864, -0.0258002)
