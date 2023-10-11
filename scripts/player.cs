@@ -170,9 +170,9 @@ public partial class player : CharacterBody3D
       };
 
       prevSpeed = currentSpeed;
-      if (!IsOnFloor())
+      if (!IsOnFloor() && Input.IsActionPressed("sprint"))
       {
-        currentSpeed = currentSpeed - 2.0f;
+        currentSpeed = currentSpeed + 2.0f;
       }
       else
       {
