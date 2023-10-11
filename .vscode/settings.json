@@ -6,6 +6,7 @@
   "editor.formatOnSave": false,
   // Enable per-language
   "[csharp]": {
+    "editor.defaultFormatter": "csharpier.csharpier-vscode",
     "editor.formatOnSave": true
   }
 }
