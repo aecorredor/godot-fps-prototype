@@ -46,6 +46,8 @@ public partial class player : CharacterBody3D
   private RayCast3D crouchingRayCast;
   private RayCast3D proningRayCast;
   private AnimationPlayer animationPlayer;
+  private float accRotationX = 0.0f;
+  private float accRotationY = 0.0f;
 
   public static class HeadBobbingSpeed
   {
@@ -60,7 +62,7 @@ public partial class player : CharacterBody3D
   {
     public static readonly float Prone = 0.1f;
     public static readonly float CrouchWalk = 0.05f;
-    public static readonly float Walk = 0.1f;
+    public static readonly float Walk = 0.09f;
     public static readonly float CrouchSprint = 0.075f;
     public static readonly float Sprint = 0.2f;
   }
@@ -204,7 +206,7 @@ public partial class player : CharacterBody3D
       isFreeLooking = false;
       neck.Rotation = neck.Rotation with
       {
-        Y = Mathf.Lerp(neck.Rotation.Y, 0.0f, lerpModifier)
+        Y = Mathf.Lerp(neck.Rotation.Y, 0.0f, lerpModifier),
       };
       camera3D.Rotation = camera3D.Rotation with
       {
@@ -237,41 +239,39 @@ public partial class player : CharacterBody3D
   {
     if (@event is InputEventMouseMotion eventMouseMotion)
     {
-      float horizontalRotation = -Mathf.DegToRad(
-        eventMouseMotion.Relative.X * mouseSensitivity
-      );
-
       if (isFreeLooking)
       {
-        neck.RotateY(horizontalRotation);
+        neck.RotateY(
+          -Mathf.DegToRad(eventMouseMotion.Relative.X * mouseSensitivity)
+        );
         neck.Rotation = neck.Rotation with
         {
           Y = Mathf.Clamp(
             neck.Rotation.Y,
-            -Mathf.DegToRad(115),
-            Mathf.DegToRad(115)
+            -Mathf.DegToRad(95),
+            Mathf.DegToRad(95)
           ),
         };
       }
       else
       {
-        // This changes the player direction. (rotates the actual body).
-        RotateY(horizontalRotation);
-      }
+        Transform3D transform = Transform;
+        transform.Basis = Basis.Identity;
+        Transform = transform;
 
-      // // This rotates the player camera view.
-      head.RotateX(
-        -Mathf.DegToRad(eventMouseMotion.Relative.Y * mouseSensitivity)
-      );
-      // Prevent rotating the head too far up or down.
-      head.Rotation = head.Rotation with
-      {
-        X = Mathf.Clamp(
-          head.Rotation.X,
-          -Mathf.DegToRad(75),
-          Mathf.DegToRad(75)
-        )
-      };
+        accRotationX += eventMouseMotion.Relative.X * mouseSensitivity * 0.01f;
+        accRotationY += eventMouseMotion.Relative.Y * mouseSensitivity * 0.01f;
+        accRotationY = Mathf.Clamp(accRotationY, -Mathf.Pi / 2, Mathf.Pi / 2);
+
+        GD.Print(accRotationX, accRotationY);
+
+        RotateObjectLocal(Vector3.Up, -accRotationX);
+        RotateObjectLocal(Vector3.Right, -accRotationY);
+        Rotation = Rotation with
+        {
+          X = Mathf.Clamp(Rotation.X, -Mathf.DegToRad(60), Mathf.DegToRad(70))
+        };
+      }
     }
 
     if (Input.IsActionJustPressed("crouch") && IsOnFloor())

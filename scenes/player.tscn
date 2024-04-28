@@ -107,7 +107,7 @@ _data = {
 script = ExtResource("1_a7p8e")
 
 [node name="standing_collision_shape" type="CollisionShape3D" parent="player"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0185027, 0.984864, -0.0258002)
+transform = Transform3D(1.00351, 0, 0, 0, 1.00351, 0, 0, 0, 1.00351, -0.0185027, 0.984864, -0.0258002)
 shape = SubResource("CapsuleShape3D_27evd")
 
 [node name="crouching_collision_shape" type="CollisionShape3D" parent="player"]
@@ -130,7 +130,7 @@ transform = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, 2.0816
 target_position = Vector3(0, 0, 2.2)
 
 [node name="P90" parent="player" instance=ExtResource("2_ks2c4")]
-transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0.295986, 1.42624, -0.528258)
+transform = Transform3D(0.15, 0, 0, 0, 0.15, 0, 0, 0, 0.15, 0.2, 1.6, -0.2)
 
 [node name="neck" type="Node3D" parent="player"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08165e-12, 1.8, 2.08165e-12)
