@@ -1,5 +1,5 @@
-using Godot;
 using System;
+using Godot;
 
 public partial class player : CharacterBody3D
 {
@@ -237,31 +237,33 @@ public partial class player : CharacterBody3D
   {
     if (@event is InputEventMouseMotion eventMouseMotion)
     {
-      float mainRotation = -Mathf.DegToRad(
+      float horizontalRotation = -Mathf.DegToRad(
         eventMouseMotion.Relative.X * mouseSensitivity
       );
+
       if (isFreeLooking)
       {
-        neck.RotateY(mainRotation);
+        neck.RotateY(horizontalRotation);
         neck.Rotation = neck.Rotation with
         {
           Y = Mathf.Clamp(
             neck.Rotation.Y,
             -Mathf.DegToRad(115),
             Mathf.DegToRad(115)
-          )
+          ),
         };
       }
       else
       {
         // This changes the player direction. (rotates the actual body).
-        RotateY(mainRotation);
+        RotateY(horizontalRotation);
       }
 
-      // This rotates the player camera view.
+      // // This rotates the player camera view.
       head.RotateX(
         -Mathf.DegToRad(eventMouseMotion.Relative.Y * mouseSensitivity)
       );
+      // Prevent rotating the head too far up or down.
       head.Rotation = head.Rotation with
       {
         X = Mathf.Clamp(

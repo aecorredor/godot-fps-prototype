@@ -1,9 +1,9 @@
-[gd_scene load_steps=17 format=3 uid="uid://6lfxgh1a5ttb"]
+[gd_scene load_steps=10 format=3 uid="uid://6lfxgh1a5ttb"]
 
 [ext_resource type="Texture2D" uid="uid://cuqiq7a8ytr42" path="res://assets/textures/dev/grids/Dark/texture_07.png" id="1_3lxok"]
 [ext_resource type="Texture2D" uid="uid://bmervycdmhjd1" path="res://assets/textures/dev/grids/Orange/texture_05.png" id="2_1b6tv"]
 [ext_resource type="Texture2D" uid="uid://bngjitxkd7vrb" path="res://assets/hdris/kloofendal_48d_partly_cloudy_puresky_2k.hdr" id="2_oxe6r"]
-[ext_resource type="Script" path="res://scripts/player.cs" id="4_jdimn"]
+[ext_resource type="PackedScene" uid="uid://busgrnwo7p8j0" path="res://scenes/player.tscn" id="4_28ljg"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mbqsd"]
 albedo_texture = ExtResource("1_3lxok")
@@ -23,104 +23,6 @@ background_mode = 2
 sky = SubResource("Sky_fx45q")
 tonemap_mode = 2
 glow_enabled = true
-
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_grxeo"]
-
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_xhavp"]
-height = 1.3
-
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_ctgwg"]
-radius = 0.3
-
-[sub_resource type="Animation" id="Animation_5bnfe"]
-length = 0.001
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("Camera3D:rotation")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Vector3(0, 0, 0)]
-}
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("Camera3D:position")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Vector3(0, 0, 0)]
-}
-
-[sub_resource type="Animation" id="Animation_lvfv0"]
-resource_name = "jumping"
-length = 0.3
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("Camera3D:rotation")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.1, 0.3),
-"transitions": PackedFloat32Array(1, 1, 1),
-"update": 0,
-"values": [Vector3(0, 0, 0), Vector3(0.0523599, 0, 0.0349066), Vector3(0, 0, 0)]
-}
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("Camera3D:position")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0.0001, 0.1, 0.3),
-"transitions": PackedFloat32Array(1, 1, 1),
-"update": 0,
-"values": [Vector3(0, 0, 0), Vector3(0, -0.1, 0), Vector3(0, 0, 0)]
-}
-
-[sub_resource type="Animation" id="Animation_h5klp"]
-resource_name = "land"
-length = 0.3
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("Camera3D:rotation")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.1, 0.3),
-"transitions": PackedFloat32Array(1, 1, 1),
-"update": 0,
-"values": [Vector3(0, 0, 0), Vector3(0.0523599, 0, 0.0349066), Vector3(0, 0, 0)]
-}
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("Camera3D:position")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0.0001, 0.1, 0.3),
-"transitions": PackedFloat32Array(1, 1, 1),
-"update": 0,
-"values": [Vector3(0, 0, 0), Vector3(0, -0.1, 0), Vector3(0, 0, 0)]
-}
-
-[sub_resource type="AnimationLibrary" id="AnimationLibrary_k3l8q"]
-_data = {
-"RESET": SubResource("Animation_5bnfe"),
-"jump": SubResource("Animation_lvfv0"),
-"land": SubResource("Animation_h5klp")
-}
 
 [node name="world" type="Node3D"]
 
@@ -151,7 +53,13 @@ size = Vector3(20, 1, 20)
 material = SubResource("StandardMaterial3D_mbqsd")
 
 [node name="CSGBox3D6" type="CSGBox3D" parent="stage"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.34215, -8.3696, 21.7178)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.85653, 0.0543938, 21.7178)
+use_collision = true
+size = Vector3(20, 1, 20)
+material = SubResource("StandardMaterial3D_mbqsd")
+
+[node name="CSGBox3D6" type="CSGBox3D" parent="stage/CSGBox3D6"]
+transform = Transform3D(13.0492, 0, 0, 0, 1, 0, 0, 0, 15.6207, -6.06864, -1.07029, -14.349)
 use_collision = true
 size = Vector3(20, 1, 20)
 material = SubResource("StandardMaterial3D_mbqsd")
@@ -177,42 +85,4 @@ environment = SubResource("Environment_t3uqb")
 transform = Transform3D(-0.866025, -0.433013, 0.25, 0, 0.5, 0.866025, -0.5, 0.75, -0.433013, 0, 0, 0)
 shadow_enabled = true
 
-[node name="player" type="CharacterBody3D" parent="."]
-script = ExtResource("4_jdimn")
-
-[node name="standing_collision_shape" type="CollisionShape3D" parent="player"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0185027, 0.984864, -0.0258002)
-shape = SubResource("CapsuleShape3D_grxeo")
-
-[node name="crouching_collision_shape" type="CollisionShape3D" parent="player"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0185027, 0.641925, -0.0258002)
-shape = SubResource("CapsuleShape3D_xhavp")
-
-[node name="prone_collision_shape" type="CollisionShape3D" parent="player"]
-transform = Transform3D(1.91069e-15, 4.37114e-08, 1, 1, -4.37114e-08, 0, 4.37114e-08, 1, -4.37114e-08, 0, 0.335701, 0)
-shape = SubResource("CapsuleShape3D_ctgwg")
-disabled = true
-
-[node name="standing_ray_cast" type="RayCast3D" parent="player"]
-target_position = Vector3(0, 2, 0)
-
-[node name="crouching_ray_cast" type="RayCast3D" parent="player"]
-target_position = Vector3(2.08165e-12, 1.5, 2.08165e-12)
-
-[node name="proning_ray_cast" type="RayCast3D" parent="player"]
-transform = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, 2.08165e-12, 0.0287629, 1.00081)
-target_position = Vector3(0, 0, 2.2)
-
-[node name="neck" type="Node3D" parent="player"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08165e-12, 1.8, 2.08165e-12)
-
-[node name="head" type="Node3D" parent="player/neck"]
-
-[node name="eyes" type="Node3D" parent="player/neck/head"]
-
-[node name="Camera3D" type="Camera3D" parent="player/neck/head/eyes"]
-
-[node name="AnimationPlayer" type="AnimationPlayer" parent="player/neck/head/eyes"]
-libraries = {
-"": SubResource("AnimationLibrary_k3l8q")
-}
+[node name="Player" parent="." instance=ExtResource("4_28ljg")]

@@ -1,0 +1,147 @@
+[gd_scene load_steps=10 format=3 uid="uid://busgrnwo7p8j0"]
+
+[ext_resource type="Script" path="res://scripts/player.cs" id="1_a7p8e"]
+[ext_resource type="PackedScene" uid="uid://ditsvmt6q8qw8" path="res://scenes/weapons/p90.tscn" id="2_ks2c4"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_27evd"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_g0eas"]
+height = 1.3
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_yjkah"]
+radius = 0.3
+
+[sub_resource type="Animation" id="Animation_5bnfe"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Camera3D:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 0, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Camera3D:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_lvfv0"]
+resource_name = "jumping"
+length = 0.3
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Camera3D:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.3),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector3(0, 0, 0), Vector3(0.0523599, 0, 0.0349066), Vector3(0, 0, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Camera3D:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0.0001, 0.1, 0.3),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector3(0, 0, 0), Vector3(0, -0.1, 0), Vector3(0, 0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_h5klp"]
+resource_name = "land"
+length = 0.3
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Camera3D:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.3),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector3(0, 0, 0), Vector3(0.0523599, 0, 0.0349066), Vector3(0, 0, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Camera3D:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0.0001, 0.1, 0.3),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector3(0, 0, 0), Vector3(0, -0.1, 0), Vector3(0, 0, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_k3l8q"]
+_data = {
+"RESET": SubResource("Animation_5bnfe"),
+"jump": SubResource("Animation_lvfv0"),
+"land": SubResource("Animation_h5klp")
+}
+
+[node name="Player" type="Node3D"]
+
+[node name="player" type="CharacterBody3D" parent="."]
+script = ExtResource("1_a7p8e")
+
+[node name="standing_collision_shape" type="CollisionShape3D" parent="player"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0185027, 0.984864, -0.0258002)
+shape = SubResource("CapsuleShape3D_27evd")
+
+[node name="crouching_collision_shape" type="CollisionShape3D" parent="player"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0185027, 0.641925, -0.0258002)
+shape = SubResource("CapsuleShape3D_g0eas")
+
+[node name="prone_collision_shape" type="CollisionShape3D" parent="player"]
+transform = Transform3D(1.91069e-15, 4.37114e-08, 1, 1, -4.37114e-08, 0, 4.37114e-08, 1, -4.37114e-08, 0, 0.335701, 0)
+shape = SubResource("CapsuleShape3D_yjkah")
+disabled = true
+
+[node name="standing_ray_cast" type="RayCast3D" parent="player"]
+target_position = Vector3(0, 2, 0)
+
+[node name="crouching_ray_cast" type="RayCast3D" parent="player"]
+target_position = Vector3(2.08165e-12, 1.5, 2.08165e-12)
+
+[node name="proning_ray_cast" type="RayCast3D" parent="player"]
+transform = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, 2.08165e-12, 0.0287629, 1.00081)
+target_position = Vector3(0, 0, 2.2)
+
+[node name="P90" parent="player" instance=ExtResource("2_ks2c4")]
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0.295986, 1.42624, -0.528258)
+
+[node name="neck" type="Node3D" parent="player"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08165e-12, 1.8, 2.08165e-12)
+
+[node name="head" type="Node3D" parent="player/neck"]
+
+[node name="eyes" type="Node3D" parent="player/neck/head"]
+
+[node name="Camera3D" type="Camera3D" parent="player/neck/head/eyes"]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="player/neck/head/eyes"]
+libraries = {
+"": SubResource("AnimationLibrary_k3l8q")
+}
