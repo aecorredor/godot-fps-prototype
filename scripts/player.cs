@@ -3,51 +3,12 @@ using Godot;
 
 public partial class player : CharacterBody3D
 {
-  // General Movement
-  private const float walkSpeed = 5.0f;
-  private const float sprintSpeed = 8.5f;
-  private const float jumpVelocity = 4.5f;
-  private const float mouseSensitivity = 0.25f;
-  private const float lerpSpeed = 10.0f;
-  private const float freeLookTiltAmount = 8.0f;
-  private const float crouchDepth = 0.5f;
-  private const float crouchSprintSpeed = 4.0f;
-  private const float crouchWalkSpeed = 2.0f;
-  private const float proneDepth = 1.2f;
-  private const float proneSpeed = 1.0f;
-
   public enum CharacterPose
   {
     Standing,
     Crouching,
     Proning
   }
-
-  // Stateful
-  private float currentSpeed = walkSpeed;
-  private float prevSpeed = walkSpeed;
-  private Vector3 direction = Vector3.Zero;
-  private bool isJumping = false;
-  private bool isFreeLooking = false;
-  private Vector2 headBobbingVector = Vector2.Zero;
-  private float headBobbingIndex = 0.0f;
-  private float headBobbingCurrentIntensity = 0.0f;
-  private Vector3 lastVelocity = Vector3.Zero;
-  private CharacterPose characterCurrentPose = CharacterPose.Standing;
-  private CharacterPose characterPrevPose = CharacterPose.Standing;
-  private Node3D neck;
-  private Node3D head;
-  private Node3D eyes;
-  private Camera3D camera3D;
-  private CollisionShape3D standingCollisionShape;
-  private CollisionShape3D crouchingCollisionShape;
-  private CollisionShape3D proneCollisionShape;
-  private RayCast3D standingRayCast;
-  private RayCast3D crouchingRayCast;
-  private RayCast3D proningRayCast;
-  private AnimationPlayer animationPlayer;
-  private float accRotationX = 0.0f;
-  private float accRotationY = 0.0f;
 
   public static class HeadBobbingSpeed
   {
@@ -62,10 +23,59 @@ public partial class player : CharacterBody3D
   {
     public static readonly float Prone = 0.1f;
     public static readonly float CrouchWalk = 0.05f;
-    public static readonly float Walk = 0.09f;
-    public static readonly float CrouchSprint = 0.075f;
-    public static readonly float Sprint = 0.2f;
+    public static readonly float Walk = 0.2f;
+    public static readonly float CrouchSprint = 0.3f;
+    public static readonly float Sprint = 0.4f;
   }
+
+  // General Movement
+  private const float walkSpeed = 2.5f;
+  private const float sprintSpeed = 5.0f;
+  private const float jumpVelocity = 3.5f;
+  private const float mouseSensitivity = 0.25f;
+  private const float lerpSpeed = 10.0f;
+  private const float freeLookTiltAmount = 8.0f;
+  private const float crouchDepth = 0.5f;
+  private const float crouchSprintSpeed = 4.0f;
+  private const float crouchWalkSpeed = 2.0f;
+  private const float proneDepth = 1.2f;
+  private const float proneSpeed = 1.0f;
+  private bool isJumping = false;
+  private bool isFreeLooking = false;
+  private Vector2 headBobbingVector = Vector2.Zero;
+  private float headBobbingIndex = 0.0f;
+  private float headBobbingCurrentIntensity = 0.0f;
+  private CharacterPose characterCurrentPose = CharacterPose.Standing;
+  private CharacterPose characterPrevPose = CharacterPose.Standing;
+
+  // Vectors
+  private float currentSpeed = walkSpeed;
+  private float prevSpeed = walkSpeed;
+  private Vector3 direction = Vector3.Zero;
+  private Vector3 lastVelocity = Vector3.Zero;
+
+  // Camera Settings
+  private Node3D neck;
+  private Node3D head;
+  private Node3D eyes;
+  private Camera3D camera3D;
+  private float accRotationX = 0.0f;
+  private float accRotationY = 0.0f;
+
+  // Collision Handling
+  private CollisionShape3D standingCollisionShape;
+  private CollisionShape3D crouchingCollisionShape;
+  private CollisionShape3D proneCollisionShape;
+  private RayCast3D standingRayCast;
+  private RayCast3D crouchingRayCast;
+  private RayCast3D proningRayCast;
+
+  // Stair Snapping TODO: Implement this.
+  // private const float maxStepHeight = 0.5f;
+  // private bool snappedToStairsLastFrame = false;
+  // private bool lastFrameWasOnFloor = false;
+
+  private AnimationPlayer animationPlayer;
 
   private void SetCharPose(CharacterPose newPose)
   {
@@ -73,32 +83,33 @@ public partial class player : CharacterBody3D
     characterCurrentPose = newPose;
   }
 
-  private void HandlePoseChange(float lerpModifier)
+  private void ProcessPose(float lerpModifier)
   {
-    float proneHeight = Mathf.Lerp(head.Position.Y, -proneDepth, lerpModifier);
-    float crouchHeight = Mathf.Lerp(
-      head.Position.Y,
-      -crouchDepth,
-      lerpModifier
-    );
-    float standingHeight = Mathf.Lerp(head.Position.Y, 0.0f, lerpModifier);
-
     switch (characterCurrentPose)
     {
       case CharacterPose.Proning:
-        head.Position = head.Position with { Y = proneHeight };
+        head.Position = head.Position with
+        {
+          Y = Mathf.Lerp(head.Position.Y, -proneDepth, lerpModifier)
+        };
         proneCollisionShape.Disabled = false;
         crouchingCollisionShape.Disabled = true;
         standingCollisionShape.Disabled = true;
         break;
       case CharacterPose.Crouching:
-        head.Position = head.Position with { Y = crouchHeight };
+        head.Position = head.Position with
+        {
+          Y = Mathf.Lerp(head.Position.Y, -crouchDepth, lerpModifier)
+        };
         crouchingCollisionShape.Disabled = false;
         proneCollisionShape.Disabled = true;
         standingCollisionShape.Disabled = true;
         break;
       case CharacterPose.Standing:
-        head.Position = head.Position with { Y = standingHeight };
+        head.Position = head.Position with
+        {
+          Y = Mathf.Lerp(head.Position.Y, 0.0f, lerpModifier)
+        };
         standingCollisionShape.Disabled = false;
         proneCollisionShape.Disabled = true;
         crouchingCollisionShape.Disabled = true;
@@ -106,11 +117,16 @@ public partial class player : CharacterBody3D
     }
   }
 
-  private void HandleMovement(float delta, float lerpModifier, Vector2 inputDir)
+  private void ProcessMovement(
+    float delta,
+    float lerpModifier,
+    Vector2 inputDir
+  )
   {
     bool isCrouching = characterCurrentPose == CharacterPose.Crouching;
+    bool isProning = characterCurrentPose == CharacterPose.Proning;
 
-    if (characterCurrentPose == CharacterPose.Proning)
+    if (isProning)
     {
       currentSpeed = proneSpeed;
       headBobbingCurrentIntensity = HeadBobbingIntensity.Prone;
@@ -183,7 +199,7 @@ public partial class player : CharacterBody3D
     }
   }
 
-  private void HandleFreeLook(float lerpModifier)
+  private void ProcessFreeLook(float lerpModifier)
   {
     if (Input.IsActionPressed("free_look"))
     {
@@ -193,17 +209,14 @@ public partial class player : CharacterBody3D
         Z = -Mathf.DegToRad(neck.Rotation.Y * freeLookTiltAmount)
       };
     }
+    // Smoothly reset head position.
     else
     {
-      if (isFreeLooking)
-      {
-        head.Rotation = head.Rotation with
-        {
-          X = Mathf.Lerp(head.Rotation.X, 0.0f, lerpModifier)
-        };
-      }
-
       isFreeLooking = false;
+      head.Rotation = head.Rotation with
+      {
+        X = Mathf.Lerp(head.Rotation.X, 0.0f, lerpModifier)
+      };
       neck.Rotation = neck.Rotation with
       {
         Y = Mathf.Lerp(neck.Rotation.Y, 0.0f, lerpModifier),
@@ -213,6 +226,117 @@ public partial class player : CharacterBody3D
         Z = Mathf.Lerp(camera3D.Rotation.Z, 0.0f, lerpModifier)
       };
     }
+  }
+
+  private void HandleCrouch()
+  {
+    switch (characterCurrentPose)
+    {
+      case CharacterPose.Standing:
+        SetCharPose(CharacterPose.Crouching);
+        break;
+      case CharacterPose.Crouching:
+        if (!standingRayCast.IsColliding())
+        {
+          SetCharPose(CharacterPose.Standing);
+        }
+        break;
+      case CharacterPose.Proning:
+        if (!crouchingRayCast.IsColliding())
+        {
+          SetCharPose(CharacterPose.Crouching);
+        }
+        break;
+    }
+  }
+
+  private void HandleProne()
+  {
+    switch (characterCurrentPose)
+    {
+      case CharacterPose.Proning:
+        if (
+          characterPrevPose == CharacterPose.Crouching
+          && !crouchingRayCast.IsColliding()
+        )
+        {
+          SetCharPose(CharacterPose.Crouching);
+        }
+        else if (!standingRayCast.IsColliding())
+        {
+          SetCharPose(CharacterPose.Standing);
+        }
+        else if (!crouchingRayCast.IsColliding())
+        {
+          SetCharPose(CharacterPose.Crouching);
+        }
+        break;
+      default:
+        if (!proningRayCast.IsColliding())
+        {
+          SetCharPose(CharacterPose.Proning);
+        }
+        break;
+    }
+  }
+
+  private void HandleJump()
+  {
+    if (standingRayCast.IsColliding())
+    {
+      return;
+    }
+
+    SetCharPose(CharacterPose.Standing);
+    Velocity = Velocity with { Y = jumpVelocity };
+    animationPlayer.Play("jump");
+  }
+
+  private void HandleFloorActions()
+  {
+    if (Input.IsActionJustPressed("crouch"))
+    {
+      HandleCrouch();
+    }
+
+    if (Input.IsActionJustPressed("prone"))
+    {
+      HandleProne();
+    }
+
+    if (Input.IsActionJustPressed("jump"))
+    {
+      HandleJump();
+    }
+  }
+
+  private void ProcessFloorActions(float lerpModifier, Vector2 inputDir)
+  {
+    // Get the input direction and handle the movement/deceleration.
+    // Don't let the player change directions while in the air.
+    direction = direction.Lerp(
+      (Transform.Basis * new Vector3(inputDir.X, 0, inputDir.Y)).Normalized(),
+      lerpModifier
+    );
+
+    if (lastVelocity.Y < 0.0f)
+    {
+      animationPlayer.Play("land");
+    }
+  }
+
+  private void AddGravity(double delta)
+  {
+    // Add the gravity.
+    Velocity = Velocity with
+    {
+      Y =
+        Velocity.Y
+        - (
+          (float)ProjectSettings.GetSetting("physics/3d/default_gravity")
+          * (float)delta
+        )
+    };
   }
 
   public override void _Ready()
@@ -263,8 +387,6 @@ public partial class player : CharacterBody3D
         accRotationY += eventMouseMotion.Relative.Y * mouseSensitivity * 0.01f;
         accRotationY = Mathf.Clamp(accRotationY, -Mathf.Pi / 2, Mathf.Pi / 2);
 
-        GD.Print(accRotationX, accRotationY);
-
         RotateObjectLocal(Vector3.Up, -accRotationX);
         RotateObjectLocal(Vector3.Right, -accRotationY);
         Rotation = Rotation with
@@ -274,68 +396,9 @@ public partial class player : CharacterBody3D
       }
     }
 
-    if (Input.IsActionJustPressed("crouch") && IsOnFloor())
+    if (IsOnFloor())
     {
-      GD.Print("Crouch");
-      switch (characterCurrentPose)
-      {
-        case CharacterPose.Standing:
-          SetCharPose(CharacterPose.Crouching);
-          break;
-        case CharacterPose.Crouching:
-          if (!standingRayCast.IsColliding())
-          {
-            SetCharPose(CharacterPose.Standing);
-          }
-          break;
-        case CharacterPose.Proning:
-          if (!crouchingRayCast.IsColliding())
-          {
-            SetCharPose(CharacterPose.Crouching);
-          }
-          break;
-      }
-    }
-
-    if (Input.IsActionJustPressed("prone") && IsOnFloor())
-    {
-      switch (characterCurrentPose)
-      {
-        case CharacterPose.Proning:
-          if (
-            characterPrevPose == CharacterPose.Crouching
-            && !crouchingRayCast.IsColliding()
-          )
-          {
-            SetCharPose(CharacterPose.Crouching);
-          }
-          else if (!standingRayCast.IsColliding())
-          {
-            SetCharPose(CharacterPose.Standing);
-          }
-          else if (!crouchingRayCast.IsColliding())
-          {
-            SetCharPose(CharacterPose.Crouching);
-          }
-          break;
-        default:
-          if (!proningRayCast.IsColliding())
-          {
-            SetCharPose(CharacterPose.Proning);
-          }
-          break;
-      }
-    }
-
-    if (
-      Input.IsActionJustPressed("ui_accept")
-      && !standingRayCast.IsColliding()
-      && IsOnFloor()
-    )
-    {
-      SetCharPose(CharacterPose.Standing);
-      Velocity = Velocity with { Y = jumpVelocity };
-      animationPlayer.Play("jump");
+      HandleFloorActions();
     }
   }
 
@@ -344,54 +407,23 @@ public partial class player : CharacterBody3D
     float lerpModifier = (float)delta * lerpSpeed;
     Vector2 inputDir = Input.GetVector("left", "right", "forward", "backward");
 
-    // Add the gravity.
-    if (!IsOnFloor())
-    {
-      Velocity = Velocity with
-      {
-        Y =
-          Velocity.Y
-          - (
-            (float)ProjectSettings.GetSetting("physics/3d/default_gravity")
-            * (float)delta
-          )
-      };
-    }
-
-    HandleMovement((float)delta, lerpModifier, inputDir);
-    HandlePoseChange(lerpModifier);
-    HandleFreeLook(lerpModifier);
-
-    // Get the input direction and handle the movement/deceleration.
-    // Don't let the player change directions while in the air.
     if (IsOnFloor())
     {
-      direction = direction.Lerp(
-        (Transform.Basis * new Vector3(inputDir.X, 0, inputDir.Y)).Normalized(),
-        lerpModifier
-      );
-
-      if (lastVelocity.Y < 0.0f)
-      {
-        animationPlayer.Play("land");
-      }
+      ProcessFloorActions(lerpModifier, inputDir);
     }
+    else
+    {
+      AddGravity(delta);
+    }
+
+    ProcessMovement((float)delta, lerpModifier, inputDir);
+    ProcessPose(lerpModifier);
+    ProcessFreeLook(lerpModifier);
 
     if (direction != Vector3.Zero)
     {
       Velocity = Velocity with { X = direction.X * currentSpeed };
       Velocity = Velocity with { Z = direction.Z * currentSpeed };
-    }
-    else
-    {
-      Velocity = Velocity with
-      {
-        X = Mathf.MoveToward(Velocity.X, 0, currentSpeed)
-      };
-      Velocity = Velocity with
-      {
-        Z = Mathf.MoveToward(Velocity.Z, 0, currentSpeed)
-      };
     }
 
     lastVelocity = Velocity;
