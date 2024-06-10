@@ -83,6 +83,117 @@ public partial class player : CharacterBody3D
     characterCurrentPose = newPose;
   }
 
+  private void HandleCrouch()
+  {
+    switch (characterCurrentPose)
+    {
+      case CharacterPose.Standing:
+        SetCharPose(CharacterPose.Crouching);
+        break;
+      case CharacterPose.Crouching:
+        if (!standingRayCast.IsColliding())
+        {
+          SetCharPose(CharacterPose.Standing);
+        }
+        break;
+      case CharacterPose.Proning:
+        if (!crouchingRayCast.IsColliding())
+        {
+          SetCharPose(CharacterPose.Crouching);
+        }
+        break;
+    }
+  }
+
+  private void HandleProne()
+  {
+    switch (characterCurrentPose)
+    {
+      case CharacterPose.Proning:
+        if (
+          characterPrevPose == CharacterPose.Crouching
+          && !crouchingRayCast.IsColliding()
+        )
+        {
+          SetCharPose(CharacterPose.Crouching);
+        }
+        else if (!standingRayCast.IsColliding())
+        {
+          SetCharPose(CharacterPose.Standing);
+        }
+        else if (!crouchingRayCast.IsColliding())
+        {
+          SetCharPose(CharacterPose.Crouching);
+        }
+        break;
+      default:
+        if (!proningRayCast.IsColliding())
+        {
+          SetCharPose(CharacterPose.Proning);
+        }
+        break;
+    }
+  }
+
+  private void HandleJump()
+  {
+    if (standingRayCast.IsColliding())
+    {
+      return;
+    }
+
+    SetCharPose(CharacterPose.Standing);
+    Velocity = Velocity with { Y = jumpVelocity };
+    animationPlayer.Play("jump");
+  }
+
+  private void HandleFloorActions()
+  {
+    if (Input.IsActionJustPressed("crouch"))
+    {
+      HandleCrouch();
+    }
+
+    if (Input.IsActionJustPressed("prone"))
+    {
+      HandleProne();
+    }
+
+    if (Input.IsActionJustPressed("jump"))
+    {
+      HandleJump();
+    }
+  }
+
+  private void HandleDefaultLook(InputEventMouseMotion eventMouseMotion)
+  {
+    Transform3D transform = Transform;
+    transform.Basis = Basis.Identity;
+    Transform = transform;
+
+    accRotationX += eventMouseMotion.Relative.X * mouseSensitivity * 0.01f;
+    accRotationY += eventMouseMotion.Relative.Y * mouseSensitivity * 0.01f;
+    accRotationY = Mathf.Clamp(accRotationY, -Mathf.Pi / 2, Mathf.Pi / 2);
+
+    RotateObjectLocal(Vector3.Up, -accRotationX);
+    RotateObjectLocal(Vector3.Right, -accRotationY);
+    Rotation = Rotation with
+    {
+      X = Mathf.Clamp(Rotation.X, -Mathf.DegToRad(60), Mathf.DegToRad(70))
+    };
+  }
+
+  private void HandleFreeLook(InputEventMouseMotion eventMouseMotion)
+  {
+    neck.RotateY(
+      -Mathf.DegToRad(eventMouseMotion.Relative.X * mouseSensitivity)
+    );
+    neck.Rotation = neck.Rotation with
+    {
+      Y = Mathf.Clamp(neck.Rotation.Y, -Mathf.DegToRad(95), Mathf.DegToRad(95)),
+    };
+  }
+
   private void ProcessPose(float lerpModifier)
   {
     switch (characterCurrentPose)
@@ -228,88 +339,6 @@ public partial class player : CharacterBody3D
     }
   }
 
-  private void HandleCrouch()
-  {
-    switch (characterCurrentPose)
-    {
-      case CharacterPose.Standing:
-        SetCharPose(CharacterPose.Crouching);
-        break;
-      case CharacterPose.Crouching:
-        if (!standingRayCast.IsColliding())
-        {
-          SetCharPose(CharacterPose.Standing);
-        }
-        break;
-      case CharacterPose.Proning:
-        if (!crouchingRayCast.IsColliding())
-        {
-          SetCharPose(CharacterPose.Crouching);
-        }
-        break;
-    }
-  }
-
-  private void HandleProne()
-  {
-    switch (characterCurrentPose)
-    {
-      case CharacterPose.Proning:
-        if (
-          characterPrevPose == CharacterPose.Crouching
-          && !crouchingRayCast.IsColliding()
-        )
-        {
-          SetCharPose(CharacterPose.Crouching);
-        }
-        else if (!standingRayCast.IsColliding())
-        {
-          SetCharPose(CharacterPose.Standing);
-        }
-        else if (!crouchingRayCast.IsColliding())
-        {
-          SetCharPose(CharacterPose.Crouching);
-        }
-        break;
-      default:
-        if (!proningRayCast.IsColliding())
-        {
-          SetCharPose(CharacterPose.Proning);
-        }
-        break;
-    }
-  }
-
-  private void HandleJump()
-  {
-    if (standingRayCast.IsColliding())
-    {
-      return;
-    }
-
-    SetCharPose(CharacterPose.Standing);
-    Velocity = Velocity with { Y = jumpVelocity };
-    animationPlayer.Play("jump");
-  }
-
-  private void HandleFloorActions()
-  {
-    if (Input.IsActionJustPressed("crouch"))
-    {
-      HandleCrouch();
-    }
-
-    if (Input.IsActionJustPressed("prone"))
-    {
-      HandleProne();
-    }
-
-    if (Input.IsActionJustPressed("jump"))
-    {
-      HandleJump();
-    }
-  }
-
   private void ProcessFloorActions(float lerpModifier, Vector2 inputDir)
   {
     // Get the input direction and handle the movement/deceleration.
@@ -365,34 +394,11 @@ public partial class player : CharacterBody3D
     {
       if (isFreeLooking)
       {
-        neck.RotateY(
-          -Mathf.DegToRad(eventMouseMotion.Relative.X * mouseSensitivity)
-        );
-        neck.Rotation = neck.Rotation with
-        {
-          Y = Mathf.Clamp(
-            neck.Rotation.Y,
-            -Mathf.DegToRad(95),
-            Mathf.DegToRad(95)
-          ),
-        };
+        HandleFreeLook(eventMouseMotion);
       }
       else
       {
-        Transform3D transform = Transform;
-        transform.Basis = Basis.Identity;
-        Transform = transform;
-
-        accRotationX += eventMouseMotion.Relative.X * mouseSensitivity * 0.01f;
-        accRotationY += eventMouseMotion.Relative.Y * mouseSensitivity * 0.01f;
-        accRotationY = Mathf.Clamp(accRotationY, -Mathf.Pi / 2, Mathf.Pi / 2);
-
-        RotateObjectLocal(Vector3.Up, -accRotationX);
-        RotateObjectLocal(Vector3.Right, -accRotationY);
-        Rotation = Rotation with
-        {
-          X = Mathf.Clamp(Rotation.X, -Mathf.DegToRad(60), Mathf.DegToRad(70))
-        };
+        HandleDefaultLook(eventMouseMotion);
       }
     }
 
