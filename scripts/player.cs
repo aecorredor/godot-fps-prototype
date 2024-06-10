@@ -228,84 +228,102 @@ public partial class player : CharacterBody3D
     }
   }
 
+  private void ProcessSprint(CharacterPose pose, float delta)
+  {
+    switch (pose)
+    {
+      case CharacterPose.Crouching:
+        currentSpeed = crouchSprintSpeed;
+        headBobbingCurrentIntensity = HeadBobbingIntensity.CrouchSprint;
+        headBobbingIndex += HeadBobbingSpeed.CrouchSprint * delta;
+        break;
+
+      case CharacterPose.Standing:
+        currentSpeed = sprintSpeed;
+        headBobbingCurrentIntensity = HeadBobbingIntensity.Sprint;
+        headBobbingIndex += HeadBobbingSpeed.Sprint * delta;
+        break;
+    }
+  }
+
+  private void ProcessWalk(CharacterPose pose, float delta)
+  {
+    switch (pose)
+    {
+      case CharacterPose.Proning:
+        currentSpeed = proneSpeed;
+        headBobbingCurrentIntensity = HeadBobbingIntensity.Prone;
+        headBobbingIndex += HeadBobbingSpeed.Prone * delta;
+        break;
+
+      case CharacterPose.Crouching:
+        currentSpeed = crouchWalkSpeed;
+        headBobbingCurrentIntensity = HeadBobbingIntensity.CrouchWalk;
+        headBobbingIndex += HeadBobbingSpeed.CrouchWalk * delta;
+        break;
+
+      case CharacterPose.Standing:
+        currentSpeed = walkSpeed;
+        headBobbingCurrentIntensity = HeadBobbingIntensity.Walk;
+        headBobbingIndex += HeadBobbingSpeed.Walk * delta;
+        break;
+    }
+
+    return;
+  }
+
+  private void ActivateHeadBobbing(float lerpModifier)
+  {
+    headBobbingVector.Y = Mathf.Sin(headBobbingIndex);
+    headBobbingVector.X = Mathf.Sin(headBobbingIndex / 2) + 0.5f;
+    eyes.Position = eyes.Position with
+    {
+      X = Mathf.Lerp(
+        eyes.Position.X,
+        headBobbingVector.X * headBobbingCurrentIntensity,
+        lerpModifier
+      ),
+      Y = Mathf.Lerp(
+        eyes.Position.Y,
+        headBobbingVector.Y * (headBobbingCurrentIntensity / 2),
+        lerpModifier
+      )
+    };
+  }
+
+  private void ResetEyesPosition(float lerpModifier)
+  {
+    eyes.Position = eyes.Position with
+    {
+      X = Mathf.Lerp(eyes.Position.X, 0.0f, lerpModifier),
+      Y = Mathf.Lerp(eyes.Position.Y, 0.0f, lerpModifier)
+    };
+  }
+
   private void ProcessMovement(
     float delta,
     float lerpModifier,
     Vector2 inputDir
   )
   {
-    bool isCrouching = characterCurrentPose == CharacterPose.Crouching;
-    bool isProning = characterCurrentPose == CharacterPose.Proning;
-
-    if (isProning)
+    if (IsOnFloor())
     {
-      currentSpeed = proneSpeed;
-      headBobbingCurrentIntensity = HeadBobbingIntensity.Prone;
-      headBobbingIndex += HeadBobbingSpeed.Prone * delta;
-    }
-    else if (Input.IsActionPressed("sprint"))
-    {
-      if (IsOnFloor())
+      if (Input.IsActionPressed("sprint"))
       {
-        currentSpeed = isCrouching ? crouchSprintSpeed : sprintSpeed;
-        headBobbingCurrentIntensity = isCrouching
-          ? HeadBobbingIntensity.CrouchSprint
-          : HeadBobbingIntensity.Sprint;
-        headBobbingIndex += isCrouching
-          ? HeadBobbingSpeed.CrouchSprint * delta
-          : HeadBobbingSpeed.Sprint * delta;
+        ProcessSprint(characterPrevPose, delta);
       }
       else
       {
-        // Don't let the player start sprinting while in the air.
-        currentSpeed = prevSpeed;
+        ProcessWalk(characterPrevPose, delta);
       }
-    }
-    else
-    {
-      currentSpeed = isCrouching ? crouchWalkSpeed : walkSpeed;
-      headBobbingCurrentIntensity = isCrouching
-        ? HeadBobbingIntensity.CrouchWalk
-        : HeadBobbingIntensity.Walk;
-      headBobbingIndex += isCrouching
-        ? HeadBobbingSpeed.CrouchWalk * delta
-        : HeadBobbingSpeed.Walk * delta;
-    }
 
-    if (IsOnFloor() && inputDir != Vector2.Zero)
-    {
-      headBobbingVector.Y = Mathf.Sin(headBobbingIndex);
-      headBobbingVector.X = Mathf.Sin(headBobbingIndex / 2) + 0.5f;
-      eyes.Position = eyes.Position with
+      if (inputDir != Vector2.Zero)
       {
-        X = Mathf.Lerp(
-          eyes.Position.X,
-          headBobbingVector.X * headBobbingCurrentIntensity,
-          lerpModifier
-        ),
-        Y = Mathf.Lerp(
-          eyes.Position.Y,
-          headBobbingVector.Y * (headBobbingCurrentIntensity / 2),
-          lerpModifier
-        )
-      };
-    }
-    else
-    {
-      eyes.Position = eyes.Position with
-      {
-        X = Mathf.Lerp(eyes.Position.X, 0.0f, lerpModifier),
-        Y = Mathf.Lerp(eyes.Position.Y, 0.0f, lerpModifier)
-      };
-
-      prevSpeed = currentSpeed;
-      if (!IsOnFloor() && Input.IsActionPressed("sprint"))
-      {
-        currentSpeed = currentSpeed + 2.0f;
+        ActivateHeadBobbing(lerpModifier);
       }
       else
       {
-        currentSpeed = prevSpeed;
+        ResetEyesPosition(lerpModifier);
       }
     }
   }
