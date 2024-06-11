@@ -262,13 +262,13 @@ public partial class player : CharacterBody3D
         break;
 
       case CharacterPose.Standing:
+        GD.Print("processing standing walk");
+
         currentSpeed = walkSpeed;
         headBobbingCurrentIntensity = HeadBobbingIntensity.Walk;
         headBobbingIndex += HeadBobbingSpeed.Walk * delta;
         break;
     }
-
-    return;
   }
 
   private void ActivateHeadBobbing(float lerpModifier)
@@ -309,11 +309,11 @@ public partial class player : CharacterBody3D
     {
       if (Input.IsActionPressed("sprint"))
       {
-        ProcessSprint(characterPrevPose, delta);
+        ProcessSprint(characterCurrentPose, delta);
       }
       else
       {
-        ProcessWalk(characterPrevPose, delta);
+        ProcessWalk(characterCurrentPose, delta);
       }
 
       if (inputDir != Vector2.Zero)
