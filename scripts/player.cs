@@ -50,7 +50,6 @@ public partial class player : CharacterBody3D
 
   // Vectors
   private float currentSpeed = walkSpeed;
-  private float prevSpeed = walkSpeed;
   private Vector3 direction = Vector3.Zero;
   private Vector3 lastVelocity = Vector3.Zero;
 
