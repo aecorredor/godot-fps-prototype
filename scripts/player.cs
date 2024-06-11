@@ -22,7 +22,7 @@ public partial class player : CharacterBody3D
   public static class HeadBobbingIntensity
   {
     public static readonly float Prone = 0.1f;
-    public static readonly float CrouchWalk = 0.05f;
+    public static readonly float CrouchWalk = 0.15f;
     public static readonly float Walk = 0.2f;
     public static readonly float CrouchSprint = 0.3f;
     public static readonly float Sprint = 0.4f;
