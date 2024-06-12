@@ -67,7 +67,8 @@ public partial class player : CharacterBody3D
   private CollisionShape3D proneCollisionShape;
   private RayCast3D standingRayCast;
   private RayCast3D crouchingRayCast;
-  private RayCast3D proningRayCast;
+  private RayCast3D proningRayCastFront;
+  private RayCast3D proningRayCastBack;
 
   // Stair Snapping TODO: Implement this.
   // private const float maxStepHeight = 0.5f;
@@ -109,24 +110,17 @@ public partial class player : CharacterBody3D
     switch (characterCurrentPose)
     {
       case CharacterPose.Proning:
-        if (
-          characterPrevPose == CharacterPose.Crouching
-          && !crouchingRayCast.IsColliding()
-        )
-        {
-          SetCharPose(CharacterPose.Crouching);
-        }
-        else if (!standingRayCast.IsColliding())
+        if (!standingRayCast.IsColliding())
         {
           SetCharPose(CharacterPose.Standing);
         }
-        else if (!crouchingRayCast.IsColliding())
-        {
-          SetCharPose(CharacterPose.Crouching);
-        }
         break;
+
       default:
-        if (!proningRayCast.IsColliding())
+        var canProne =
+          !proningRayCastFront.IsColliding()
+          && !proningRayCastBack.IsColliding();
+        if (canProne)
         {
           SetCharPose(CharacterPose.Proning);
         }
@@ -402,7 +396,8 @@ public partial class player : CharacterBody3D
     proneCollisionShape = GetNode<CollisionShape3D>("prone_collision_shape");
     standingRayCast = GetNode<RayCast3D>("standing_ray_cast");
     crouchingRayCast = GetNode<RayCast3D>("crouching_ray_cast");
-    proningRayCast = GetNode<RayCast3D>("proning_ray_cast");
+    proningRayCastFront = GetNode<RayCast3D>("proning_ray_cast_front");
+    proningRayCastBack = GetNode<RayCast3D>("proning_ray_cast_back");
     animationPlayer = eyes.GetNode<AnimationPlayer>("AnimationPlayer");
   }
 
