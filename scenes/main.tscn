@@ -3,7 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://cuqiq7a8ytr42" path="res://assets/textures/dev/grids/Dark/texture_07.png" id="1_3lxok"]
 [ext_resource type="Texture2D" uid="uid://bmervycdmhjd1" path="res://assets/textures/dev/grids/Orange/texture_05.png" id="2_1b6tv"]
 [ext_resource type="Texture2D" uid="uid://bngjitxkd7vrb" path="res://assets/hdris/kloofendal_48d_partly_cloudy_puresky_2k.hdr" id="2_oxe6r"]
-[ext_resource type="PackedScene" path="res://scenes/CSGStairMaker3D.tscn" id="3_5ioe3"]
+[ext_resource type="PackedScene" uid="uid://bak8ltrhbmlv5" path="res://scenes/CSGStairMaker3D.tscn" id="3_5ioe3"]
 [ext_resource type="PackedScene" uid="uid://busgrnwo7p8j0" path="res://scenes/player.tscn" id="4_28ljg"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mbqsd"]

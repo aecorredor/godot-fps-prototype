@@ -143,7 +143,11 @@ public partial class player : CharacterBody3D
 
     SetCharPose(CharacterPose.Standing);
     Velocity = Velocity with { Y = jumpVelocity };
-    animationPlayer.Play("jump");
+
+    if (!isFreeLooking)
+    {
+      animationPlayer.Play("jump");
+    }
   }
 
   private void HandleFloorActions()
@@ -262,8 +266,6 @@ public partial class player : CharacterBody3D
         break;
 
       case CharacterPose.Standing:
-        GD.Print("processing standing walk");
-
         currentSpeed = walkSpeed;
         headBobbingCurrentIntensity = HeadBobbingIntensity.Walk;
         headBobbingIndex += HeadBobbingSpeed.Walk * delta;
@@ -329,22 +331,21 @@ public partial class player : CharacterBody3D
 
   private void ProcessFreeLook(float lerpModifier)
   {
-    if (Input.IsActionPressed("free_look"))
+    // This action is continuous, so it needs to be checked every frame, and
+    // not only when the action is pressed.
+    if (isFreeLooking)
     {
-      isFreeLooking = true;
+      // Cancel the camera animation for jumping/landing when free looking.
+      // The free look needs a different camera animation which is not
+      // currently present.
+      animationPlayer.Advance(2);
       camera3D.Rotation = camera3D.Rotation with
       {
         Z = -Mathf.DegToRad(neck.Rotation.Y * freeLookTiltAmount)
       };
     }
-    // Smoothly reset head position.
     else
     {
-      isFreeLooking = false;
-      head.Rotation = head.Rotation with
-      {
-        X = Mathf.Lerp(head.Rotation.X, 0.0f, lerpModifier)
-      };
       neck.Rotation = neck.Rotation with
       {
         Y = Mathf.Lerp(neck.Rotation.Y, 0.0f, lerpModifier),
@@ -365,7 +366,7 @@ public partial class player : CharacterBody3D
       lerpModifier
     );
 
-    if (lastVelocity.Y < 0.0f)
+    if (lastVelocity.Y < 0.0f && !isFreeLooking)
     {
       animationPlayer.Play("land");
     }
@@ -407,6 +408,8 @@ public partial class player : CharacterBody3D
 
   public override void _Input(InputEvent @event)
   {
+    isFreeLooking = Input.IsActionPressed("free_look");
+
     if (@event is InputEventMouseMotion eventMouseMotion)
     {
       if (isFreeLooking)
