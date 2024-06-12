@@ -71,11 +71,39 @@ public partial class player : CharacterBody3D
   private RayCast3D proningRayCastBack;
 
   // Stair Snapping TODO: Implement this.
-  // private const float maxStepHeight = 0.5f;
-  // private bool snappedToStairsLastFrame = false;
-  // private bool lastFrameWasOnFloor = false;
+  private const float MAX_STEP_HEIGHT = 0.5f;
+  private bool snappedToStairsLastFrame = false;
+  private ulong lastFrameWasOnFloor = 0;
 
   private AnimationPlayer animationPlayer;
+
+  private bool IsSurfaceTooSteep(Vector3 normal)
+  {
+    return normal.AngleTo(Vector3.Up) > FloorMaxAngle;
+  }
+
+  // Simulates the character body moving along the given motion vector to
+  // determine whether the body would collide with anything. Mainly used to
+  // handle stairs/ramps.
+  private bool RunBodyTestMotion(
+    Transform3D from,
+    Vector3 motion,
+    PhysicsTestMotionResult3D result = null
+  )
+  {
+    if (result == null)
+    {
+      result = new PhysicsTestMotionResult3D();
+    }
+
+    var parameters = new PhysicsTestMotionParameters3D()
+    {
+      From = from,
+      Motion = motion
+    };
+
+    return PhysicsServer3D.BodyTestMotion(GetRid(), parameters, result);
+  }
 
   private void SetCharPose(CharacterPose newPose)
   {
@@ -425,6 +453,7 @@ public partial class player : CharacterBody3D
 
   public override void _PhysicsProcess(double delta)
   {
+    lastFrameWasOnFloor = Engine.GetPhysicsFrames();
     float lerpModifier = (float)delta * lerpSpeed;
     Vector2 inputDir = Input.GetVector("left", "right", "forward", "backward");
 

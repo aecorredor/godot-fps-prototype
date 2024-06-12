@@ -132,6 +132,13 @@ target_position = Vector3(0, 0, 1)
 transform = Transform3D(-1, -7.64274e-15, -8.74228e-08, 0, -1, 8.74228e-08, -8.74228e-08, 8.74228e-08, 1, 2.08165e-12, 0.328479, -0.0138774)
 target_position = Vector3(0, 0, 1)
 
+[node name="stairs_ray_cast_ahead" type="RayCast3D" parent="player"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.00985, -0.42417)
+target_position = Vector3(0, -0.55, 0)
+
+[node name="stairs_ray_cast_below" type="RayCast3D" parent="player"]
+target_position = Vector3(0, -0.75, 0)
+
 [node name="neck" type="Node3D" parent="player"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.08165e-12, 1.8, 2.08165e-12)
 
