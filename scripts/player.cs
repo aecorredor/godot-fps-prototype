@@ -1,7 +1,7 @@
 using System;
 using Godot;
 
-public partial class player : CharacterBody3D
+public partial class Player : CharacterBody3D
 {
   public enum CharacterPose
   {
@@ -29,6 +29,7 @@ public partial class player : CharacterBody3D
   }
 
   // General Movement
+  public Vector2 inputDir = Vector2.Zero;
   private const float walkSpeed = 2.5f;
   private const float sprintSpeed = 5.0f;
   private const float jumpVelocity = 3.5f;
@@ -410,6 +411,7 @@ public partial class player : CharacterBody3D
 
   public override void _Ready()
   {
+    GD.Print("Player ready.");
     Input.MouseMode = Input.MouseModeEnum.Captured;
     neck = GetNode<Node3D>("neck");
     head = neck.GetNode<Node3D>("head");
@@ -455,7 +457,7 @@ public partial class player : CharacterBody3D
   {
     lastFrameWasOnFloor = Engine.GetPhysicsFrames();
     float lerpModifier = (float)delta * lerpSpeed;
-    Vector2 inputDir = Input.GetVector("left", "right", "forward", "backward");
+    inputDir = Input.GetVector("left", "right", "forward", "backward");
 
     if (IsOnFloor())
     {
