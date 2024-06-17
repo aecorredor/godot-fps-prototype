@@ -118,7 +118,7 @@ material_override = SubResource("StandardMaterial3D_46kn8")
 use_collision = true
 size = Vector3(2.31885, 2.13035, 4.85449)
 material = SubResource("StandardMaterial3D_6er82")
-num_stairs = 25
+num_stairs = 40
 
 [node name="CSGStairMaker3D2" parent="stage" instance=ExtResource("3_5ioe3")]
 transform = Transform3D(-6.99219, 0, 8.74228e-08, 0, 3.15516, 0, -6.11277e-07, 0, -1, 2.5803, 10.1195, 2.51273)

@@ -63,6 +63,9 @@ public partial class Player : CharacterBody3D
   private float accRotationY = 0.0f;
 
   // Collision Handling
+  [ExportCategory("Collision")]
+  [Export]
+  private bool debugCollision = true;
   private CollisionShape3D standingCollisionShape;
   private CollisionShape3D crouchingCollisionShape;
   private CollisionShape3D proneCollisionShape;
@@ -70,6 +73,7 @@ public partial class Player : CharacterBody3D
   private RayCast3D crouchingRayCast;
   private RayCast3D proningRayCastFront;
   private RayCast3D proningRayCastBack;
+  private RayCast3D stairsRayCastAhead;
 
   // Stair Snapping TODO: Implement this.
   private const float MAX_STEP_HEIGHT = 0.5f;
@@ -78,9 +82,14 @@ public partial class Player : CharacterBody3D
 
   private AnimationPlayer animationPlayer;
 
-  private bool IsSurfaceTooSteep(Vector3 normal)
+  private GodotObject lineDrawer;
+
+  private void DrawLine(Vector3 start, Vector3 end, int time = 5)
   {
-    return normal.AngleTo(Vector3.Up) > FloorMaxAngle;
+    if (debugCollision)
+    {
+      lineDrawer.Call("DrawLine", start, end, new Color(0, 0, 1), time);
+    }
   }
 
   // Simulates the character body moving along the given motion vector to
@@ -205,7 +214,7 @@ public partial class Player : CharacterBody3D
     RotateObjectLocal(Vector3.Right, -accRotationY);
     Rotation = Rotation with
     {
-      X = Mathf.Clamp(Rotation.X, -Mathf.DegToRad(60), Mathf.DegToRad(70))
+      X = Mathf.Clamp(Rotation.X, -Mathf.DegToRad(60), Mathf.DegToRad(55))
     };
   }
 
@@ -409,6 +418,69 @@ public partial class Player : CharacterBody3D
     };
   }
 
+  private bool IsSurfaceTooSteep(Vector3 normal)
+  {
+    return normal.AngleTo(Vector3.Up) > FloorMaxAngle;
+  }
+
+  private bool SnapUpStairs(float delta)
+  {
+    if (!IsOnFloor())
+    {
+      return false;
+    }
+
+    var expectedMotion = lastVelocity * new Vector3(1, 0, 1) * delta;
+    var nextStepPosition = GlobalTransform.Translated(
+      expectedMotion + new Vector3(0, MAX_STEP_HEIGHT, 0)
+    );
+    var stepDownCheck = new KinematicCollision3D();
+
+    if (
+      TestMove(
+        nextStepPosition,
+        new Vector3(0, -MAX_STEP_HEIGHT, 0),
+        stepDownCheck
+      )
+    )
+    {
+      var stepHeight = (
+        nextStepPosition.Origin + stepDownCheck.GetTravel() - GlobalPosition
+      ).Y;
+
+      if (
+        stepHeight > MAX_STEP_HEIGHT
+        || stepHeight < 0.01f
+        || (stepDownCheck.GetPosition() - GlobalPosition).Y > MAX_STEP_HEIGHT
+      )
+        return false;
+
+      stairsRayCastAhead.GlobalPosition =
+        stepDownCheck.GetPosition()
+        + new Vector3(0, MAX_STEP_HEIGHT * 0.8f, 0)
+        + expectedMotion.Normalized();
+      stairsRayCastAhead.ForceRaycastUpdate();
+
+      DrawLine(
+        stairsRayCastAhead.GlobalTransform.Origin,
+        stairsRayCastAhead.ToGlobal(stairsRayCastAhead.TargetPosition)
+      );
+
+      if (
+        stairsRayCastAhead.IsColliding()
+        && !IsSurfaceTooSteep(stairsRayCastAhead.GetCollisionNormal())
+      )
+      {
+        GlobalPosition = nextStepPosition.Origin + stepDownCheck.GetTravel();
+        ApplyFloorSnap();
+
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   public override void _Ready()
   {
     GD.Print("Player ready.");
@@ -428,7 +500,17 @@ public partial class Player : CharacterBody3D
     crouchingRayCast = GetNode<RayCast3D>("crouching_ray_cast");
     proningRayCastFront = GetNode<RayCast3D>("proning_ray_cast_front");
     proningRayCastBack = GetNode<RayCast3D>("proning_ray_cast_back");
+    stairsRayCastAhead = GetNode<RayCast3D>("stairs_ray_cast_ahead");
     animationPlayer = eyes.GetNode<AnimationPlayer>("AnimationPlayer");
+
+    if (debugCollision)
+    {
+      GDScript Draw3DLineScript = GD.Load<GDScript>(
+        "res://scripts/DrawLine3D.gd"
+      );
+      lineDrawer = (GodotObject)Draw3DLineScript.New();
+      AddChild((Node)lineDrawer);
+    }
   }
 
   public override void _Input(InputEvent @event)
@@ -479,6 +561,10 @@ public partial class Player : CharacterBody3D
     }
 
     lastVelocity = Velocity;
-    MoveAndSlide();
+
+    if (!SnapUpStairs((float)delta))
+    {
+      MoveAndSlide();
+    }
   }
 }

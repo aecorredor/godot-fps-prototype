@@ -102,6 +102,7 @@ _data = {
 
 [node name="Player" type="CharacterBody3D"]
 script = ExtResource("1_d5huo")
+debugCollision = false
 
 [node name="standing_collision_shape" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.985, 0)
@@ -132,7 +133,7 @@ target_position = Vector3(0, 0, 1)
 
 [node name="stairs_ray_cast_ahead" type="RayCast3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.00985, -0.42417)
-target_position = Vector3(0, -0.55, 0)
+target_position = Vector3(0, -0.75, 0)
 
 [node name="stairs_ray_cast_below" type="RayCast3D" parent="."]
 target_position = Vector3(0, -0.75, 0)
