@@ -102,7 +102,7 @@ _data = {
 
 [node name="Player" type="CharacterBody3D"]
 script = ExtResource("1_d5huo")
-debugCollision = false
+DebugCollision = false
 
 [node name="standing_collision_shape" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.985, 0)

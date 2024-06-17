@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using Godot;
 
 public partial class Player : CharacterBody3D
@@ -41,7 +42,6 @@ public partial class Player : CharacterBody3D
   private const float crouchWalkSpeed = 2.0f;
   private const float proneDepth = 1.2f;
   private const float proneSpeed = 1.0f;
-  private bool isJumping = false;
   private bool isFreeLooking = false;
   private Vector2 headBobbingVector = Vector2.Zero;
   private float headBobbingIndex = 0.0f;
@@ -62,10 +62,12 @@ public partial class Player : CharacterBody3D
   private float accRotationX = 0.0f;
   private float accRotationY = 0.0f;
 
-  // Collision Handling
   [ExportCategory("Collision")]
   [Export]
-  private bool debugCollision = true;
+  private bool DebugCollision = true;
+
+  private const float MAX_STEP_HEIGHT = 0.5f;
+
   private CollisionShape3D standingCollisionShape;
   private CollisionShape3D crouchingCollisionShape;
   private CollisionShape3D proneCollisionShape;
@@ -74,21 +76,23 @@ public partial class Player : CharacterBody3D
   private RayCast3D proningRayCastFront;
   private RayCast3D proningRayCastBack;
   private RayCast3D stairsRayCastAhead;
-
-  // Stair Snapping TODO: Implement this.
-  private const float MAX_STEP_HEIGHT = 0.5f;
-  private bool snappedToStairsLastFrame = false;
-  private ulong lastFrameWasOnFloor = 0;
+  private RayCast3D stairsRayCastBelow;
 
   private AnimationPlayer animationPlayer;
 
   private GodotObject lineDrawer;
 
-  private void DrawLine(Vector3 start, Vector3 end, int time = 5)
+  private void DebugRayCast(RayCast3D rayCast, int time = 5)
   {
-    if (debugCollision)
+    if (DebugCollision)
     {
-      lineDrawer.Call("DrawLine", start, end, new Color(0, 0, 1), time);
+      lineDrawer.Call(
+        "DrawLine",
+        rayCast.GlobalTransform.Origin,
+        rayCast.ToGlobal(rayCast.TargetPosition),
+        new Color(0, 0, 1),
+        time
+      );
     }
   }
 
@@ -398,7 +402,7 @@ public partial class Player : CharacterBody3D
       lerpModifier
     );
 
-    if (lastVelocity.Y < 0.0f && !isFreeLooking)
+    if (lastVelocity.Y < -2.0f && !isFreeLooking)
     {
       animationPlayer.Play("land");
     }
@@ -461,10 +465,7 @@ public partial class Player : CharacterBody3D
         + expectedMotion.Normalized();
       stairsRayCastAhead.ForceRaycastUpdate();
 
-      DrawLine(
-        stairsRayCastAhead.GlobalTransform.Origin,
-        stairsRayCastAhead.ToGlobal(stairsRayCastAhead.TargetPosition)
-      );
+      DebugRayCast(stairsRayCastAhead);
 
       if (
         stairsRayCastAhead.IsColliding()
@@ -481,9 +482,48 @@ public partial class Player : CharacterBody3D
     return false;
   }
 
+  private void SnapDownStairs()
+  {
+    // This thing is using a raycast on top of a test move because the
+    // test move sometimes is not perfect because of the collision shape of
+    // the player. The capsule can sometimes hit the edge of a stair and not
+    // return correct results.
+    stairsRayCastBelow.ForceRaycastUpdate();
+    var stairsAreBelow =
+      stairsRayCastBelow.IsColliding()
+      && (!IsSurfaceTooSteep(stairsRayCastBelow.GetCollisionNormal()));
+
+    DebugRayCast(stairsRayCastBelow);
+
+    if (
+      !IsOnFloor()
+      && stairsAreBelow
+      // Don't snap when we're jumping/actually falling.
+      && lastVelocity.Y < 0
+      && lastVelocity.Y > -0.5f
+    )
+    {
+      var stepDownCheck = new KinematicCollision3D();
+
+      if (
+        TestMove(
+          GlobalTransform,
+          new Vector3(0, -MAX_STEP_HEIGHT, 0),
+          stepDownCheck
+        )
+      )
+      {
+        Position = Position with
+        {
+          Y = Position.Y + stepDownCheck.GetTravel().Y
+        };
+        ApplyFloorSnap();
+      }
+    }
+  }
+
   public override void _Ready()
   {
-    GD.Print("Player ready.");
     Input.MouseMode = Input.MouseModeEnum.Captured;
     neck = GetNode<Node3D>("neck");
     head = neck.GetNode<Node3D>("head");
@@ -501,9 +541,10 @@ public partial class Player : CharacterBody3D
     proningRayCastFront = GetNode<RayCast3D>("proning_ray_cast_front");
     proningRayCastBack = GetNode<RayCast3D>("proning_ray_cast_back");
     stairsRayCastAhead = GetNode<RayCast3D>("stairs_ray_cast_ahead");
+    stairsRayCastBelow = GetNode<RayCast3D>("stairs_ray_cast_below");
     animationPlayer = eyes.GetNode<AnimationPlayer>("AnimationPlayer");
 
-    if (debugCollision)
+    if (DebugCollision)
     {
       GDScript Draw3DLineScript = GD.Load<GDScript>(
         "res://scripts/DrawLine3D.gd"
@@ -537,7 +578,6 @@ public partial class Player : CharacterBody3D
 
   public override void _PhysicsProcess(double delta)
   {
-    lastFrameWasOnFloor = Engine.GetPhysicsFrames();
     float lerpModifier = (float)delta * lerpSpeed;
     inputDir = Input.GetVector("left", "right", "forward", "backward");
 
@@ -565,6 +605,7 @@ public partial class Player : CharacterBody3D
     if (!SnapUpStairs((float)delta))
     {
       MoveAndSlide();
+      SnapDownStairs();
     }
   }
 }
