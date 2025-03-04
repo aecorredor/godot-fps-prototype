@@ -1,6 +1,6 @@
 [gd_scene load_steps=9 format=3 uid="uid://bmafno656ha5p"]
 
-[ext_resource type="Script" path="res://scripts/Player.cs" id="1_d5huo"]
+[ext_resource type="Script" uid="uid://cu7ackudgrv8" path="res://scripts/Player.cs" id="1_d5huo"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_c5w37"]
 
@@ -95,9 +95,9 @@ tracks/1/keys = {
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_k3l8q"]
 _data = {
-"RESET": SubResource("Animation_5bnfe"),
-"jump": SubResource("Animation_lvfv0"),
-"land": SubResource("Animation_h5klp")
+&"RESET": SubResource("Animation_5bnfe"),
+&"jump": SubResource("Animation_lvfv0"),
+&"land": SubResource("Animation_h5klp")
 }
 
 [node name="Player" type="CharacterBody3D"]
