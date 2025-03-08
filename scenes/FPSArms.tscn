@@ -1,0 +1,19 @@
+[gd_scene load_steps=2 format=3 uid="uid://d1ebg6rn7b3lr"]
+
+[ext_resource type="PackedScene" uid="uid://p4slw3y3in7b" path="res://assets/models/fps-arms.glb" id="1_34qwk"]
+
+[node name="fps-arms" instance=ExtResource("1_34qwk")]
+
+[node name="Skeleton3D" parent="rig" index="0"]
+bones/2/rotation = Quaternion(-0.149565, 0.0710133, -0.557541, 0.813471)
+bones/3/rotation = Quaternion(0.196884, 0.690143, -0.599584, 0.354172)
+bones/4/rotation = Quaternion(0.211115, -0.347635, 0.0256986, 0.913192)
+bones/5/rotation = Quaternion(-0.00428535, -0.0573777, 0.00541139, 0.998329)
+bones/10/rotation = Quaternion(-0.0301032, 0.821873, 0.326959, 0.465528)
+bones/12/rotation = Quaternion(0.151684, -0.181017, 0.088624, 0.967663)
+bones/25/rotation = Quaternion(-0.824507, 0.520305, 0.212551, 0.065526)
+bones/26/rotation = Quaternion(0.196884, -0.690143, 0.599584, 0.354172)
+bones/27/rotation = Quaternion(0.211115, 0.347635, -0.0256986, 0.913192)
+bones/28/rotation = Quaternion(-0.00428533, 0.0573777, -0.00541139, 0.998329)
+bones/33/rotation = Quaternion(0.0301032, 0.821873, 0.326959, -0.465528)
+bones/35/rotation = Quaternion(0.151684, 0.181017, -0.0886239, 0.967663)

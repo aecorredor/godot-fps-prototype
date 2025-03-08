@@ -32,7 +32,7 @@ public partial class Player : CharacterBody3D
   // General Movement
   public Vector2 inputDir = Vector2.Zero;
   private const float walkSpeed = 2.5f;
-  private const float sprintSpeed = 5.0f;
+  private const float sprintSpeed = 8.5f;
   private const float jumpVelocity = 3.5f;
   private const float mouseSensitivity = 0.25f;
   private const float lerpSpeed = 10.0f;
@@ -55,6 +55,7 @@ public partial class Player : CharacterBody3D
   private Vector3 lastVelocity = Vector3.Zero;
 
   // Camera Settings
+  private Node3D body;
   private Node3D neck;
   private Node3D head;
   private Node3D eyes;
@@ -77,10 +78,24 @@ public partial class Player : CharacterBody3D
   private RayCast3D proningRayCastBack;
   private RayCast3D stairsRayCastAhead;
   private RayCast3D stairsRayCastBelow;
+  private AnimationPlayer fpsArmsAnimationPlayer;
+
+  // Footsteps
+  private AudioStreamPlayer3D footstepsAudioPlayer;
+  private float lastFootstepTime = 0.0f;
+  private bool rightFoot = true;
+  private AudioStreamRandomizer walkSoundRandomizer;
+  private AudioStreamRandomizer crouchWalkSoundRandomizer;
 
   private AnimationPlayer animationPlayer;
 
   private GodotObject lineDrawer;
+
+  private float lastHeadBobbingYValue = 0.0f;
+
+  [ExportCategory("Audio")]
+  [Export]
+  private float footstepMasterVolume = 0.1f;
 
   private void DebugRayCast(RayCast3D rayCast, int time = 5)
   {
@@ -170,6 +185,14 @@ public partial class Player : CharacterBody3D
     }
   }
 
+  private void StopRunningAnimation()
+  {
+    if (fpsArmsAnimationPlayer.CurrentAnimation == "running")
+    {
+      fpsArmsAnimationPlayer.Stop();
+    }
+  }
+
   private void HandleJump()
   {
     if (standingRayCast.IsColliding())
@@ -177,6 +200,7 @@ public partial class Player : CharacterBody3D
       return;
     }
 
+    StopRunningAnimation();
     SetCharPose(CharacterPose.Standing);
     Velocity = Velocity with { Y = jumpVelocity };
 
@@ -238,27 +262,27 @@ public partial class Player : CharacterBody3D
     switch (characterCurrentPose)
     {
       case CharacterPose.Proning:
-        head.Position = head.Position with
+        body.Position = body.Position with
         {
-          Y = Mathf.Lerp(head.Position.Y, -proneDepth, lerpModifier),
+          Y = Mathf.Lerp(body.Position.Y, -proneDepth, lerpModifier),
         };
         proneCollisionShape.Disabled = false;
         crouchingCollisionShape.Disabled = true;
         standingCollisionShape.Disabled = true;
         break;
       case CharacterPose.Crouching:
-        head.Position = head.Position with
+        body.Position = body.Position with
         {
-          Y = Mathf.Lerp(head.Position.Y, -crouchDepth, lerpModifier),
+          Y = Mathf.Lerp(body.Position.Y, -crouchDepth, lerpModifier),
         };
         crouchingCollisionShape.Disabled = false;
         proneCollisionShape.Disabled = true;
         standingCollisionShape.Disabled = true;
         break;
       case CharacterPose.Standing:
-        head.Position = head.Position with
+        body.Position = body.Position with
         {
-          Y = Mathf.Lerp(head.Position.Y, 0.0f, lerpModifier),
+          Y = Mathf.Lerp(body.Position.Y, 0.0f, lerpModifier),
         };
         standingCollisionShape.Disabled = false;
         proneCollisionShape.Disabled = true;
@@ -272,6 +296,7 @@ public partial class Player : CharacterBody3D
     switch (pose)
     {
       case CharacterPose.Crouching:
+        StopRunningAnimation();
         currentSpeed = crouchSprintSpeed;
         headBobbingCurrentIntensity = HeadBobbingIntensity.CrouchSprint;
         headBobbingIndex += HeadBobbingSpeed.CrouchSprint * delta;
@@ -281,12 +306,31 @@ public partial class Player : CharacterBody3D
         currentSpeed = sprintSpeed;
         headBobbingCurrentIntensity = HeadBobbingIntensity.Sprint;
         headBobbingIndex += HeadBobbingSpeed.Sprint * delta;
+
+        float animationLength = fpsArmsAnimationPlayer
+          .GetAnimation("running")
+          .Length;
+
+        // Calculate normalized position in animation based on the
+        // headBobbingIndex and a multiplier to slow down the animation.
+        float normalizedPosition =
+          (Mathf.Sin(headBobbingIndex * 0.75f) + 1) / 2;
+
+        // Set animation position directly with smoothing
+        if (!fpsArmsAnimationPlayer.IsPlaying())
+        {
+          fpsArmsAnimationPlayer.Play("running");
+        }
+        fpsArmsAnimationPlayer.Seek(normalizedPosition * animationLength, true);
+
         break;
     }
   }
 
   private void ProcessWalk(CharacterPose pose, float delta)
   {
+    StopRunningAnimation();
+
     switch (pose)
     {
       case CharacterPose.Proning:
@@ -309,8 +353,62 @@ public partial class Player : CharacterBody3D
     }
   }
 
+  private void PlayFootstepSound()
+  {
+    if (!IsOnFloor() || footstepsAudioPlayer == null)
+      return;
+
+    // Check if enough time has passed since the last footstep
+    float currentTime = Time.GetTicksMsec() / 1000.0f;
+    float minTimeBetweenSteps = 0.1f;
+
+    if (currentTime - lastFootstepTime < minTimeBetweenSteps)
+      return;
+
+    lastFootstepTime = currentTime;
+
+    // Get the appropriate sound based on movement state
+    AudioStreamRandomizer currentRandomizer;
+    float volumeScale;
+
+    switch (characterCurrentPose)
+    {
+      case CharacterPose.Crouching:
+        currentRandomizer = crouchWalkSoundRandomizer;
+        volumeScale = Input.IsActionPressed("sprint") ? 0.3f : 0.15f;
+        break;
+
+      default:
+        currentRandomizer = walkSoundRandomizer;
+
+        if (Input.IsActionPressed("sprint"))
+        {
+          volumeScale = 1.0f;
+        }
+        else
+        {
+          volumeScale = 0.5f;
+        }
+        break;
+    }
+
+    volumeScale *= footstepMasterVolume;
+
+    if (currentRandomizer != null)
+    {
+      footstepsAudioPlayer.Stream = currentRandomizer;
+      footstepsAudioPlayer.VolumeDb = Mathf.LinearToDb(volumeScale);
+      footstepsAudioPlayer.PitchScale = rightFoot ? 1.0f : 1.05f;
+      footstepsAudioPlayer.Play();
+      rightFoot = !rightFoot;
+    }
+  }
+
   private void ActivateHeadBobbing(float lerpModifier)
   {
+    // Store previous value before calculating new one
+    lastHeadBobbingYValue = headBobbingVector.Y;
+
     headBobbingVector.Y = Mathf.Sin(headBobbingIndex);
     headBobbingVector.X = Mathf.Sin(headBobbingIndex / 2) + 0.5f;
     eyes.Position = eyes.Position with
@@ -326,6 +424,22 @@ public partial class Player : CharacterBody3D
         lerpModifier
       ),
     };
+
+    // More reliable zero-crossing detection that uses the previous and current
+    // values This catches the zero-crossing even when frames skip the exact 0
+    // value
+    if (lastHeadBobbingYValue <= 0 && headBobbingVector.Y > 0)
+    {
+      PlayFootstepSound();
+    }
+
+    // Reset the index periodically to avoid floating-point precision issues
+    // 2π ≈ 6.28, so we reset after a few complete cycles
+    if (headBobbingIndex > 100.0f)
+    {
+      // Reset to a value that maintains the same position in the cycle
+      headBobbingIndex = headBobbingIndex % (2 * Mathf.Pi);
+    }
   }
 
   private void ResetEyesPosition(float lerpModifier)
@@ -335,6 +449,9 @@ public partial class Player : CharacterBody3D
       X = Mathf.Lerp(eyes.Position.X, 0.0f, lerpModifier),
       Y = Mathf.Lerp(eyes.Position.Y, 0.0f, lerpModifier),
     };
+
+    // Reset footstep timing when not moving
+    lastFootstepTime = 0.0f;
   }
 
   private void ProcessMovement(
@@ -525,7 +642,8 @@ public partial class Player : CharacterBody3D
   public override void _Ready()
   {
     Input.MouseMode = Input.MouseModeEnum.Captured;
-    neck = GetNode<Node3D>("neck");
+    body = GetNode<Node3D>("body");
+    neck = GetNode<Node3D>("body/neck");
     head = neck.GetNode<Node3D>("head");
     eyes = head.GetNode<Node3D>("eyes");
     camera3D = eyes.GetNode<Camera3D>("Camera3D");
@@ -543,6 +661,18 @@ public partial class Player : CharacterBody3D
     stairsRayCastAhead = GetNode<RayCast3D>("stairs_ray_cast_ahead");
     stairsRayCastBelow = GetNode<RayCast3D>("stairs_ray_cast_below");
     animationPlayer = eyes.GetNode<AnimationPlayer>("AnimationPlayer");
+    fpsArmsAnimationPlayer = GetNode<AnimationPlayer>(
+      "body/fps_arms/AnimationPlayer"
+    );
+
+    // Footstep sound setup
+    footstepsAudioPlayer = GetNode<AudioStreamPlayer3D>("FootstepsAudioPlayer");
+    walkSoundRandomizer = ResourceLoader.Load<AudioStreamRandomizer>(
+      "res://assets/sounds/WalkAudioStreamRandomizer.tres"
+    );
+    crouchWalkSoundRandomizer = ResourceLoader.Load<AudioStreamRandomizer>(
+      "res://assets/sounds/CrouchAudioStreamRandomizer.tres"
+    );
 
     if (DebugCollision)
     {
