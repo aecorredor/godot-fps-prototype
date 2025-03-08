@@ -67,6 +67,14 @@ public partial class Player : CharacterBody3D
   [Export]
   private bool DebugCollision = true;
 
+  [ExportCategory("Audio")]
+  [Export]
+  private float footstepMasterVolume = 0.1f;
+
+  [ExportCategory("Camera")]
+  [Export]
+  private int freeLookMaxAngle = 60;
+
   private const float MAX_STEP_HEIGHT = 0.5f;
 
   private CollisionShape3D standingCollisionShape;
@@ -93,9 +101,8 @@ public partial class Player : CharacterBody3D
 
   private float lastHeadBobbingYValue = 0.0f;
 
-  [ExportCategory("Audio")]
-  [Export]
-  private float footstepMasterVolume = 0.1f;
+  // Add this field to track sprint state
+  private bool isCurrentlySprinting = false;
 
   private void DebugRayCast(RayCast3D rayCast, int time = 5)
   {
@@ -253,7 +260,11 @@ public partial class Player : CharacterBody3D
     );
     neck.Rotation = neck.Rotation with
     {
-      Y = Mathf.Clamp(neck.Rotation.Y, -Mathf.DegToRad(95), Mathf.DegToRad(95)),
+      Y = Mathf.Clamp(
+        neck.Rotation.Y,
+        -Mathf.DegToRad(freeLookMaxAngle),
+        Mathf.DegToRad(freeLookMaxAngle)
+      ),
     };
   }
 
@@ -376,7 +387,7 @@ public partial class Player : CharacterBody3D
     AudioStreamRandomizer currentRandomizer;
     float volumeScale;
 
-    var isSprinting = CanSprint() && Input.IsActionPressed("sprint");
+    var isSprinting = isCurrentlySprinting;
 
     switch (characterCurrentPose)
     {
@@ -461,10 +472,11 @@ public partial class Player : CharacterBody3D
     lastFootstepTime = 0.0f;
   }
 
-  private bool CanSprint()
+  private bool CanStartSprint()
   {
     if (
-      characterCurrentPose == CharacterPose.Proning
+      !Input.IsActionPressed("sprint")
+      || characterCurrentPose == CharacterPose.Proning
       || inputDir == Vector2.Zero
     )
       return false;
@@ -478,8 +490,25 @@ public partial class Player : CharacterBody3D
     // Calculate angle between input and forward direction
     float angle = Mathf.Abs(forward.AngleTo(normalizedInput));
 
-    // Allow sprint only if we're within some reasonable degrees of forward.
+    // Only allow sprint if we're within 30 degrees of forward
     return angle <= Mathf.DegToRad(30);
+  }
+
+  private bool CanContinueSprint()
+  {
+    return Input.IsActionPressed("sprint")
+      && inputDir != Vector2.Zero
+      && characterCurrentPose != CharacterPose.Proning;
+  }
+
+  private Vector2 AdjustInputForSprinting(Vector2 input)
+  {
+    if (!isCurrentlySprinting)
+      return input;
+
+    // Create a modified input with reduced side movement
+    // 0.1f means side movement is at 10% effectiveness while sprinting
+    return new Vector2(input.X * 0.2f, input.Y);
   }
 
   private void ProcessMovement(
@@ -490,7 +519,14 @@ public partial class Player : CharacterBody3D
   {
     if (IsOnFloor())
     {
-      if (Input.IsActionPressed("sprint") && CanSprint())
+      isCurrentlySprinting = isCurrentlySprinting
+        ? CanContinueSprint()
+        : CanStartSprint();
+
+      // Apply side movement reduction when sprinting
+      Vector2 adjustedInput = AdjustInputForSprinting(inputDir);
+
+      if (isCurrentlySprinting)
       {
         ProcessSprint(characterCurrentPose, delta);
       }
@@ -499,7 +535,7 @@ public partial class Player : CharacterBody3D
         ProcessWalk(characterCurrentPose, delta);
       }
 
-      if (inputDir != Vector2.Zero)
+      if (adjustedInput != Vector2.Zero)
       {
         ActivateHeadBobbing(lerpModifier);
       }
@@ -507,9 +543,13 @@ public partial class Player : CharacterBody3D
       {
         ResetEyesPosition(lerpModifier);
       }
+
+      ProcessFloorActions(lerpModifier, adjustedInput);
     }
     else
     {
+      isCurrentlySprinting = false;
+      AddGravity(delta);
       StopRunningAnimation();
     }
   }
@@ -742,15 +782,6 @@ public partial class Player : CharacterBody3D
   {
     float lerpModifier = (float)delta * lerpSpeed;
     inputDir = Input.GetVector("left", "right", "forward", "backward");
-
-    if (IsOnFloor())
-    {
-      ProcessFloorActions(lerpModifier, inputDir);
-    }
-    else
-    {
-      AddGravity(delta);
-    }
 
     ProcessMovement((float)delta, lerpModifier, inputDir);
     ProcessPose(lerpModifier);
