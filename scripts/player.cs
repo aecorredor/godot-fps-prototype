@@ -31,7 +31,7 @@ public partial class Player : CharacterBody3D
 
   // General Movement
   public Vector2 inputDir = Vector2.Zero;
-  private const float walkSpeed = 2.5f;
+  private const float walkSpeed = 4f;
   private const float sprintSpeed = 8.5f;
   private const float jumpVelocity = 3.5f;
   private const float mouseSensitivity = 0.25f;
@@ -376,17 +376,19 @@ public partial class Player : CharacterBody3D
     AudioStreamRandomizer currentRandomizer;
     float volumeScale;
 
+    var isSprinting = CanSprint() && Input.IsActionPressed("sprint");
+
     switch (characterCurrentPose)
     {
       case CharacterPose.Crouching:
         currentRandomizer = crouchWalkSoundRandomizer;
-        volumeScale = Input.IsActionPressed("sprint") ? 0.3f : 0.15f;
+        volumeScale = isSprinting ? 0.3f : 0.15f;
         break;
 
       default:
         currentRandomizer = walkSoundRandomizer;
 
-        if (Input.IsActionPressed("sprint"))
+        if (isSprinting)
         {
           volumeScale = 1.0f;
         }
@@ -459,6 +461,27 @@ public partial class Player : CharacterBody3D
     lastFootstepTime = 0.0f;
   }
 
+  private bool CanSprint()
+  {
+    if (
+      characterCurrentPose == CharacterPose.Proning
+      || inputDir == Vector2.Zero
+    )
+      return false;
+
+    // Convert input direction to a normalized vector
+    Vector2 normalizedInput = inputDir.Normalized();
+
+    // Forward is (0, -1) in our input space
+    Vector2 forward = new Vector2(0, -1);
+
+    // Calculate angle between input and forward direction
+    float angle = Mathf.Abs(forward.AngleTo(normalizedInput));
+
+    // Allow sprint only if we're within some reasonable degrees of forward.
+    return angle <= Mathf.DegToRad(30);
+  }
+
   private void ProcessMovement(
     float delta,
     float lerpModifier,
@@ -467,10 +490,7 @@ public partial class Player : CharacterBody3D
   {
     if (IsOnFloor())
     {
-      if (
-        Input.IsActionPressed("sprint")
-        && characterCurrentPose != CharacterPose.Proning
-      )
+      if (Input.IsActionPressed("sprint") && CanSprint())
       {
         ProcessSprint(characterCurrentPose, delta);
       }
