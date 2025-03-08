@@ -189,6 +189,7 @@ public partial class Player : CharacterBody3D
   {
     if (fpsArmsAnimationPlayer.CurrentAnimation == "running")
     {
+      fpsArmsAnimationPlayer.Seek(0.0f, true);
       fpsArmsAnimationPlayer.Stop();
     }
   }
@@ -200,7 +201,6 @@ public partial class Player : CharacterBody3D
       return;
     }
 
-    StopRunningAnimation();
     SetCharPose(CharacterPose.Standing);
     Velocity = Velocity with { Y = jumpVelocity };
 
@@ -307,21 +307,27 @@ public partial class Player : CharacterBody3D
         headBobbingCurrentIntensity = HeadBobbingIntensity.Sprint;
         headBobbingIndex += HeadBobbingSpeed.Sprint * delta;
 
-        float animationLength = fpsArmsAnimationPlayer
-          .GetAnimation("running")
-          .Length;
-
-        // Calculate normalized position in animation based on the
-        // headBobbingIndex and a multiplier to slow down the animation.
-        float normalizedPosition =
-          (Mathf.Sin(headBobbingIndex * 0.75f) + 1) / 2;
-
-        // Set animation position directly with smoothing
-        if (!fpsArmsAnimationPlayer.IsPlaying())
+        if (inputDir != Vector2.Zero)
         {
-          fpsArmsAnimationPlayer.Play("running");
+          float animationLength = fpsArmsAnimationPlayer
+            .GetAnimation("running")
+            .Length;
+
+          // Calculate normalized position in animation based on the
+          // headBobbingIndex and a multiplier to slow down the animation.
+          float normalizedPosition =
+            (Mathf.Sin(headBobbingIndex * 0.75f) + 1) / 2;
+
+          // Set animation position directly with smoothing
+          if (!fpsArmsAnimationPlayer.IsPlaying())
+          {
+            fpsArmsAnimationPlayer.Play("running");
+          }
+          fpsArmsAnimationPlayer.Seek(
+            normalizedPosition * animationLength,
+            true
+          );
         }
-        fpsArmsAnimationPlayer.Seek(normalizedPosition * animationLength, true);
 
         break;
     }
@@ -330,7 +336,6 @@ public partial class Player : CharacterBody3D
   private void ProcessWalk(CharacterPose pose, float delta)
   {
     StopRunningAnimation();
-
     switch (pose)
     {
       case CharacterPose.Proning:
@@ -462,7 +467,10 @@ public partial class Player : CharacterBody3D
   {
     if (IsOnFloor())
     {
-      if (Input.IsActionPressed("sprint"))
+      if (
+        Input.IsActionPressed("sprint")
+        && characterCurrentPose != CharacterPose.Proning
+      )
       {
         ProcessSprint(characterCurrentPose, delta);
       }
@@ -479,6 +487,10 @@ public partial class Player : CharacterBody3D
       {
         ResetEyesPosition(lerpModifier);
       }
+    }
+    else
+    {
+      StopRunningAnimation();
     }
   }
 
