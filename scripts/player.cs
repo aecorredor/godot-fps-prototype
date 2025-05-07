@@ -87,6 +87,7 @@ public partial class Player : CharacterBody3D
   private RayCast3D stairsRayCastAhead;
   private RayCast3D stairsRayCastBelow;
   private AnimationPlayer fpsArmsAnimationPlayer;
+  private AnimationPlayer characterAnimationPlayer;
 
   // Footsteps
   private AudioStreamPlayer3D footstepsAudioPlayer;
@@ -199,6 +200,11 @@ public partial class Player : CharacterBody3D
       fpsArmsAnimationPlayer.Seek(0.0f, true);
       fpsArmsAnimationPlayer.Stop();
     }
+
+    if (characterAnimationPlayer.CurrentAnimation == "walk")
+    {
+      characterAnimationPlayer.Stop();
+    }
   }
 
   private void HandleJump()
@@ -214,6 +220,7 @@ public partial class Player : CharacterBody3D
     if (!isFreeLooking)
     {
       animationPlayer.Play("jump");
+      characterAnimationPlayer.Play("roundhouse_kick");
     }
   }
 
@@ -338,6 +345,11 @@ public partial class Player : CharacterBody3D
             normalizedPosition * animationLength,
             true
           );
+
+          if (!characterAnimationPlayer.IsPlaying())
+          {
+            characterAnimationPlayer.Play("walk");
+          }
         }
 
         break;
@@ -735,6 +747,9 @@ public partial class Player : CharacterBody3D
     animationPlayer = eyes.GetNode<AnimationPlayer>("AnimationPlayer");
     fpsArmsAnimationPlayer = GetNode<AnimationPlayer>(
       "body/fps_arms/AnimationPlayer"
+    );
+    characterAnimationPlayer = GetNode<AnimationPlayer>(
+      "mixamo/AnimationPlayer"
     );
 
     // Footstep sound setup
