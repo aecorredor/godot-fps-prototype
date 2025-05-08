@@ -55,6 +55,7 @@ public partial class Player : CharacterBody3D
   private float currentSpeed = walkSpeed;
   private Vector3 direction = Vector3.Zero;
   private Vector3 lastVelocity = Vector3.Zero;
+  private Vector2 currentVelocity = Vector2.Zero;
 
   // Camera Settings
   private Node3D body;
@@ -77,6 +78,12 @@ public partial class Player : CharacterBody3D
   [Export]
   private int freeLookMaxAngle = 55;
 
+  [Export]
+  public string locomotionBlendPath { get; set; }
+
+  [Export]
+  public float transitionSpeed { get; set; } = 0.1f;
+
   private const float MAX_STEP_HEIGHT = 0.5f;
 
   private CollisionShape3D standingCollisionShape;
@@ -96,7 +103,9 @@ public partial class Player : CharacterBody3D
   private AudioStreamRandomizer walkSoundRandomizer;
   private AudioStreamRandomizer crouchWalkSoundRandomizer;
 
-  private AnimationPlayer animationPlayer;
+  // Animations
+  private AnimationPlayer cameraAnimationPlayer;
+  private AnimationTree characterAnimationTree { get; set; }
 
   private GodotObject lineDrawer;
 
@@ -205,7 +214,7 @@ public partial class Player : CharacterBody3D
 
     if (!isFreeLooking)
     {
-      animationPlayer.Play("jump");
+      cameraAnimationPlayer.Play("jump");
     }
   }
 
@@ -459,7 +468,9 @@ public partial class Player : CharacterBody3D
       || characterCurrentPose == CharacterPose.Proning
       || inputDir == Vector2.Zero
     )
+    {
       return false;
+    }
 
     // Convert input direction to a normalized vector
     Vector2 normalizedInput = inputDir.Normalized();
@@ -538,7 +549,7 @@ public partial class Player : CharacterBody3D
       // Cancel the camera animation for jumping/landing when free looking.
       // The free look needs a different camera animation which is not
       // currently present.
-      animationPlayer.Advance(2);
+      cameraAnimationPlayer.Advance(2);
       camera3D.Rotation = camera3D.Rotation with
       {
         Z = -Mathf.DegToRad(neck.Rotation.Y * freeLookTiltAmount),
@@ -568,7 +579,7 @@ public partial class Player : CharacterBody3D
 
     if (lastVelocity.Y < -2.0f && !isFreeLooking)
     {
-      animationPlayer.Play("land");
+      cameraAnimationPlayer.Play("land");
     }
   }
 
@@ -707,7 +718,8 @@ public partial class Player : CharacterBody3D
     proningRayCastBack = GetNode<RayCast3D>("proning_ray_cast_back");
     stairsRayCastAhead = GetNode<RayCast3D>("stairs_ray_cast_ahead");
     stairsRayCastBelow = GetNode<RayCast3D>("stairs_ray_cast_below");
-    animationPlayer = eyes.GetNode<AnimationPlayer>("AnimationPlayer");
+    cameraAnimationPlayer = eyes.GetNode<AnimationPlayer>("AnimationPlayer");
+    characterAnimationTree = GetNode<AnimationTree>("character/AnimationTree");
 
     // Footstep sound setup
     footstepsAudioPlayer = GetNode<AudioStreamPlayer3D>("FootstepsAudioPlayer");
@@ -748,6 +760,18 @@ public partial class Player : CharacterBody3D
     {
       HandleFloorActions();
     }
+  }
+
+  public override void _Process(double delta)
+  {
+    Vector2 newDelta = inputDir - currentVelocity;
+    if (newDelta.Length() > transitionSpeed * (float)delta)
+    {
+      newDelta = newDelta.Normalized() * transitionSpeed * (float)delta;
+    }
+    currentVelocity += newDelta;
+
+    characterAnimationTree.Set(locomotionBlendPath, currentVelocity);
   }
 
   public override void _PhysicsProcess(double delta)

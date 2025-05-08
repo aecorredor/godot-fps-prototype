@@ -32,7 +32,6 @@ tonemap_mode = 2
 glow_enabled = true
 
 [node name="world" type="Node3D"]
-transform = Transform3D(0.666442, 0, 0, 0, 0.666442, 0, 0, 0, 0.666442, -0.00489616, 0.0357003, 0.00659084)
 
 [node name="stage" type="Node3D" parent="."]
 
