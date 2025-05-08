@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://cu7ackudgrv8" path="res://scripts/Player.cs" id="1_d5huo"]
 [ext_resource type="PackedScene" uid="uid://p4slw3y3in7b" path="res://assets/models/fps-arms.glb" id="2_g2els"]
-[ext_resource type="PackedScene" uid="uid://bsu8n65obojvx" path="res://scenes/mixamo.tscn" id="3_qhqgy"]
+[ext_resource type="PackedScene" uid="uid://de7udqfev6xhx" path="res://scenes/mixamo.tscn" id="3_qhqgy"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_c5w37"]
 
@@ -144,7 +144,7 @@ target_position = Vector3(0, -0.75, 0)
 [node name="body" type="Node3D" parent="."]
 
 [node name="neck" type="Node3D" parent="body"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0969804, 1.64439, -0.259821)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0969804, 1.64439, -0.261236)
 
 [node name="head" type="Node3D" parent="body/neck"]
 

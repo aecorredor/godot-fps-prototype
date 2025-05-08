@@ -29,6 +29,8 @@ public partial class Player : CharacterBody3D
     public static readonly float Sprint = 0.4f;
   }
 
+  private float lerpModifier = 0.0f;
+
   // General Movement
   public Vector2 inputDir = Vector2.Zero;
   private const float walkSpeed = 4f;
@@ -73,7 +75,7 @@ public partial class Player : CharacterBody3D
 
   [ExportCategory("Camera")]
   [Export]
-  private int freeLookMaxAngle = 60;
+  private int freeLookMaxAngle = 55;
 
   private const float MAX_STEP_HEIGHT = 0.5f;
 
@@ -253,10 +255,16 @@ public partial class Player : CharacterBody3D
     accRotationY = Mathf.Clamp(accRotationY, -Mathf.Pi / 2, Mathf.Pi / 2);
 
     RotateObjectLocal(Vector3.Up, -accRotationX);
-    RotateObjectLocal(Vector3.Right, -accRotationY);
-    Rotation = Rotation with
+    // Enables freely looking up and down without moving the whole character
+    // mesh.
+    neck.Rotation = neck.Rotation with
     {
-      X = Mathf.Clamp(Rotation.X, -Mathf.DegToRad(60), Mathf.DegToRad(55)),
+      X = Mathf.Clamp(
+        neck.Rotation.X
+          - Mathf.DegToRad(eventMouseMotion.Relative.Y * mouseSensitivity),
+        -Mathf.DegToRad(60),
+        Mathf.DegToRad(55)
+      ),
     };
   }
 
@@ -272,10 +280,16 @@ public partial class Player : CharacterBody3D
         -Mathf.DegToRad(freeLookMaxAngle),
         Mathf.DegToRad(freeLookMaxAngle)
       ),
+      X = Mathf.Clamp(
+        neck.Rotation.X
+          - Mathf.DegToRad(eventMouseMotion.Relative.Y * mouseSensitivity),
+        -Mathf.DegToRad(60),
+        Mathf.DegToRad(55)
+      ),
     };
   }
 
-  private void ProcessPose(float lerpModifier)
+  private void ProcessPose()
   {
     switch (characterCurrentPose)
     {
@@ -523,11 +537,7 @@ public partial class Player : CharacterBody3D
     return new Vector2(input.X * 0.2f, input.Y);
   }
 
-  private void ProcessMovement(
-    float delta,
-    float lerpModifier,
-    Vector2 inputDir
-  )
+  private void ProcessMovement(float delta, Vector2 inputDir)
   {
     if (IsOnFloor())
     {
@@ -566,7 +576,7 @@ public partial class Player : CharacterBody3D
     }
   }
 
-  private void ProcessFreeLook(float lerpModifier)
+  private void ProcessFreeLook()
   {
     // This action is continuous, so it needs to be checked every frame, and
     // not only when the action is pressed.
@@ -795,12 +805,12 @@ public partial class Player : CharacterBody3D
 
   public override void _PhysicsProcess(double delta)
   {
-    float lerpModifier = (float)delta * lerpSpeed;
+    lerpModifier = (float)delta * lerpSpeed;
     inputDir = Input.GetVector("left", "right", "forward", "backward");
 
-    ProcessMovement((float)delta, lerpModifier, inputDir);
-    ProcessPose(lerpModifier);
-    ProcessFreeLook(lerpModifier);
+    ProcessMovement((float)delta, inputDir);
+    ProcessPose();
+    ProcessFreeLook();
 
     if (direction != Vector3.Zero)
     {
