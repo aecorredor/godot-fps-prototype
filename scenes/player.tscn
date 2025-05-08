@@ -1,7 +1,6 @@
-[gd_scene load_steps=10 format=3 uid="uid://bmafno656ha5p"]
+[gd_scene load_steps=9 format=3 uid="uid://bmafno656ha5p"]
 
 [ext_resource type="Script" uid="uid://cu7ackudgrv8" path="res://scripts/Player.cs" id="1_d5huo"]
-[ext_resource type="PackedScene" uid="uid://p4slw3y3in7b" path="res://assets/models/fps-arms.glb" id="2_g2els"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_c5w37"]
 
@@ -155,10 +154,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0969804, 1.64439, -0.261236
 libraries = {
 &"": SubResource("AnimationLibrary_k3l8q")
 }
-
-[node name="fps_arms" parent="body" instance=ExtResource("2_g2els")]
-transform = Transform3D(-1, 0, 8.74228e-08, 0, 1, 0, -8.74228e-08, 0, -1, 0, 1.16659, -0.0873656)
-visible = false
 
 [node name="FootstepsAudioPlayer" type="AudioStreamPlayer3D" parent="."]
 volume_db = -3.0

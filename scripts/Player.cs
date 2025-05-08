@@ -88,7 +88,6 @@ public partial class Player : CharacterBody3D
   private RayCast3D proningRayCastBack;
   private RayCast3D stairsRayCastAhead;
   private RayCast3D stairsRayCastBelow;
-  private AnimationPlayer fpsArmsAnimationPlayer;
 
   // Footsteps
   private AudioStreamPlayer3D footstepsAudioPlayer;
@@ -191,15 +190,6 @@ public partial class Player : CharacterBody3D
           SetCharPose(CharacterPose.Proning);
         }
         break;
-    }
-  }
-
-  private void StopRunningAnimation()
-  {
-    if (fpsArmsAnimationPlayer.CurrentAnimation == "running")
-    {
-      fpsArmsAnimationPlayer.Seek(0.0f, true);
-      fpsArmsAnimationPlayer.Stop();
     }
   }
 
@@ -321,7 +311,6 @@ public partial class Player : CharacterBody3D
     switch (pose)
     {
       case CharacterPose.Crouching:
-        StopRunningAnimation();
         currentSpeed = crouchSprintSpeed;
         headBobbingCurrentIntensity = HeadBobbingIntensity.CrouchSprint;
         headBobbingIndex += HeadBobbingSpeed.CrouchSprint * delta;
@@ -332,35 +321,12 @@ public partial class Player : CharacterBody3D
         headBobbingCurrentIntensity = HeadBobbingIntensity.Sprint;
         headBobbingIndex += HeadBobbingSpeed.Sprint * delta;
 
-        if (inputDir != Vector2.Zero)
-        {
-          float animationLength = fpsArmsAnimationPlayer
-            .GetAnimation("running")
-            .Length;
-
-          // Calculate normalized position in animation based on the
-          // headBobbingIndex and a multiplier to slow down the animation.
-          float normalizedPosition =
-            (Mathf.Sin(headBobbingIndex * 0.75f) + 1) / 2;
-
-          // Set animation position directly with smoothing
-          if (!fpsArmsAnimationPlayer.IsPlaying())
-          {
-            fpsArmsAnimationPlayer.Play("running");
-          }
-          fpsArmsAnimationPlayer.Seek(
-            normalizedPosition * animationLength,
-            true
-          );
-        }
-
         break;
     }
   }
 
   private void ProcessWalk(CharacterPose pose, float delta)
   {
-    StopRunningAnimation();
     switch (pose)
     {
       case CharacterPose.Proning:
@@ -560,7 +526,6 @@ public partial class Player : CharacterBody3D
     {
       isCurrentlySprinting = false;
       AddGravity(delta);
-      StopRunningAnimation();
     }
   }
 
@@ -743,9 +708,6 @@ public partial class Player : CharacterBody3D
     stairsRayCastAhead = GetNode<RayCast3D>("stairs_ray_cast_ahead");
     stairsRayCastBelow = GetNode<RayCast3D>("stairs_ray_cast_below");
     animationPlayer = eyes.GetNode<AnimationPlayer>("AnimationPlayer");
-    fpsArmsAnimationPlayer = GetNode<AnimationPlayer>(
-      "body/fps_arms/AnimationPlayer"
-    );
 
     // Footstep sound setup
     footstepsAudioPlayer = GetNode<AudioStreamPlayer3D>("FootstepsAudioPlayer");
