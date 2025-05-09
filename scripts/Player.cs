@@ -106,6 +106,7 @@ public partial class Player : CharacterBody3D
   // Animations
   private AnimationPlayer cameraAnimationPlayer;
   private AnimationTree characterAnimationTree { get; set; }
+  private AnimationTree headlessCharacterAnimationTree { get; set; }
 
   private GodotObject lineDrawer;
 
@@ -720,6 +721,9 @@ public partial class Player : CharacterBody3D
     stairsRayCastBelow = GetNode<RayCast3D>("stairs_ray_cast_below");
     cameraAnimationPlayer = eyes.GetNode<AnimationPlayer>("AnimationPlayer");
     characterAnimationTree = GetNode<AnimationTree>("character/AnimationTree");
+    headlessCharacterAnimationTree = GetNode<AnimationTree>(
+      "headless_character/AnimationTree"
+    );
 
     // Footstep sound setup
     footstepsAudioPlayer = GetNode<AudioStreamPlayer3D>("FootstepsAudioPlayer");
@@ -772,6 +776,7 @@ public partial class Player : CharacterBody3D
     currentVelocity += newDelta;
 
     characterAnimationTree.Set(locomotionBlendPath, currentVelocity);
+    headlessCharacterAnimationTree.Set(locomotionBlendPath, currentVelocity);
   }
 
   public override void _PhysicsProcess(double delta)

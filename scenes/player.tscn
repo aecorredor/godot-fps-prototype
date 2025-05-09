@@ -1,7 +1,8 @@
-[gd_scene load_steps=10 format=3 uid="uid://bmafno656ha5p"]
+[gd_scene load_steps=11 format=3 uid="uid://bmafno656ha5p"]
 
 [ext_resource type="Script" uid="uid://cu7ackudgrv8" path="res://scripts/Player.cs" id="1_d5huo"]
-[ext_resource type="PackedScene" uid="uid://bt2tf84shocdu" path="res://scenes/character.tscn" id="2_g2els"]
+[ext_resource type="PackedScene" uid="uid://wn0u5wy0gxlc" path="res://scenes/headless_character.tscn" id="2_g2els"]
+[ext_resource type="PackedScene" uid="uid://bt2tf84shocdu" path="res://scenes/character.tscn" id="3_qhqgy"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_c5w37"]
 
@@ -143,10 +144,10 @@ target_position = Vector3(0, -0.75, 0)
 target_position = Vector3(0, -0.75, 0)
 
 [node name="body" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.00712919, -0.227785)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.00712919, -0.227387)
 
 [node name="neck" type="Node3D" parent="body"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.8019e-05, 1.64439, 0.00312465)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.8019e-05, 1.75446, -0.0669213)
 
 [node name="head" type="Node3D" parent="body/neck"]
 
@@ -162,5 +163,6 @@ libraries = {
 [node name="FootstepsAudioPlayer" type="AudioStreamPlayer3D" parent="."]
 volume_db = -3.0
 
-[node name="character" parent="." instance=ExtResource("2_g2els")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.00855154, 0.00500333)
+[node name="headless_character" parent="." instance=ExtResource("2_g2els")]
+
+[node name="character" parent="." instance=ExtResource("3_qhqgy")]
