@@ -106,7 +106,6 @@ public partial class Player : CharacterBody3D
   // Animations
   private AnimationPlayer cameraAnimationPlayer;
   private AnimationTree characterAnimationTree { get; set; }
-  private AnimationTree headlessCharacterAnimationTree { get; set; }
 
   private GodotObject lineDrawer;
 
@@ -364,20 +363,22 @@ public partial class Player : CharacterBody3D
     if (!IsOnFloor() || footstepsAudioPlayer == null)
       return;
 
+    var isSprinting = isCurrentlySprinting;
+
     // Check if enough time has passed since the last footstep
     float currentTime = Time.GetTicksMsec() / 1000.0f;
-    float minTimeBetweenSteps = 0.1f;
+    float minTimeBetweenSteps = isSprinting ? 0.1f : 0.4f;
 
     if (currentTime - lastFootstepTime < minTimeBetweenSteps)
+    {
       return;
+    }
 
     lastFootstepTime = currentTime;
 
     // Get the appropriate sound based on movement state
     AudioStreamRandomizer currentRandomizer;
     float volumeScale;
-
-    var isSprinting = isCurrentlySprinting;
 
     switch (characterCurrentPose)
     {
@@ -720,10 +721,7 @@ public partial class Player : CharacterBody3D
     stairsRayCastAhead = GetNode<RayCast3D>("stairs_ray_cast_ahead");
     stairsRayCastBelow = GetNode<RayCast3D>("stairs_ray_cast_below");
     cameraAnimationPlayer = eyes.GetNode<AnimationPlayer>("AnimationPlayer");
-    characterAnimationTree = GetNode<AnimationTree>("character/AnimationTree");
-    headlessCharacterAnimationTree = GetNode<AnimationTree>(
-      "headless_character/AnimationTree"
-    );
+    characterAnimationTree = GetNode<AnimationTree>("Character/AnimationTree");
 
     // Footstep sound setup
     footstepsAudioPlayer = GetNode<AudioStreamPlayer3D>("FootstepsAudioPlayer");
@@ -776,7 +774,6 @@ public partial class Player : CharacterBody3D
     currentVelocity += newDelta;
 
     characterAnimationTree.Set(locomotionBlendPath, currentVelocity);
-    headlessCharacterAnimationTree.Set(locomotionBlendPath, currentVelocity);
   }
 
   public override void _PhysicsProcess(double delta)

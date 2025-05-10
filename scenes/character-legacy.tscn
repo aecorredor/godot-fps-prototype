@@ -1,7 +1,6 @@
-[gd_scene load_steps=23 format=3 uid="uid://bt2tf84shocdu"]
+[gd_scene load_steps=22 format=3 uid="uid://bt2tf84shocdu"]
 
-[ext_resource type="PackedScene" uid="uid://x52kfw6vidja" path="res://assets/models/character.glb" id="1_agfs1"]
-[ext_resource type="AnimationLibrary" uid="uid://dpoxu80js4cr7" path="res://assets/animations/libraries/humanoid-library.res" id="2_rkhd4"]
+[ext_resource type="AnimationLibrary" uid="uid://dpoxu80js4cr7" path="res://assets/animations/libraries/humanoid-library.res" id="3_j4xnk"]
 
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_i0gp7"]
 animation = &"humanoid-library/Fall"
@@ -12,31 +11,31 @@ animation = &"humanoid-library/Jump"
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_ofy33"]
 animation = &"humanoid-library/Land"
 
-[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_hwag6"]
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_qupl4"]
 animation = &"humanoid-library/StandingWalkForward"
 
-[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_q365o"]
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_xidri"]
 animation = &"humanoid-library/StandingIdle"
 
-[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_2dhob"]
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_vb2s3"]
 animation = &"humanoid-library/StandingWalkRight"
 
-[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_ub80i"]
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_7i80u"]
 animation = &"humanoid-library/StandingWalkLeft"
 
-[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_mxjeq"]
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_br8qo"]
 animation = &"humanoid-library/StandingWalkBack"
 
 [sub_resource type="AnimationNodeBlendSpace2D" id="AnimationNodeBlendSpace2D_i0gp7"]
-blend_point_0/node = SubResource("AnimationNodeAnimation_hwag6")
+blend_point_0/node = SubResource("AnimationNodeAnimation_qupl4")
 blend_point_0/pos = Vector2(0, -1)
-blend_point_1/node = SubResource("AnimationNodeAnimation_q365o")
+blend_point_1/node = SubResource("AnimationNodeAnimation_xidri")
 blend_point_1/pos = Vector2(0, 0)
-blend_point_2/node = SubResource("AnimationNodeAnimation_2dhob")
+blend_point_2/node = SubResource("AnimationNodeAnimation_vb2s3")
 blend_point_2/pos = Vector2(1, 0)
-blend_point_3/node = SubResource("AnimationNodeAnimation_ub80i")
+blend_point_3/node = SubResource("AnimationNodeAnimation_7i80u")
 blend_point_3/pos = Vector2(-1, 0)
-blend_point_4/node = SubResource("AnimationNodeAnimation_mxjeq")
+blend_point_4/node = SubResource("AnimationNodeAnimation_br8qo")
 blend_point_4/pos = Vector2(0, 1)
 
 [sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_imt6f"]
@@ -74,7 +73,7 @@ states/Locomotion/node = SubResource("AnimationNodeBlendSpace2D_i0gp7")
 states/Locomotion/position = Vector2(346, 99.875)
 states/Start/position = Vector2(119, 99.75)
 transitions = ["Start", "Locomotion", SubResource("AnimationNodeStateMachineTransition_imt6f"), "Locomotion", "Jump", SubResource("AnimationNodeStateMachineTransition_3et6r"), "Jump", "Fall", SubResource("AnimationNodeStateMachineTransition_so3kc"), "Fall", "Land", SubResource("AnimationNodeStateMachineTransition_ohau6"), "Land", "Locomotion", SubResource("AnimationNodeStateMachineTransition_tc861"), "Locomotion", "Fall", SubResource("AnimationNodeStateMachineTransition_sougf")]
-graph_offset = Vector2(95.6799, 91.9374)
+graph_offset = Vector2(118.68, 41.9374)
 
 [sub_resource type="AnimationNodeTimeScale" id="AnimationNodeTimeScale_sougf"]
 
@@ -95,10 +94,10 @@ nodes/UpperBodyStateMachine/position = Vector2(-580, 490)
 nodes/output/position = Vector2(470, 140)
 node_connections = [&"TimeScale", 0, &"LocomotionStateMachine", &"UpperBodyBlend", 0, &"TimeScale", &"UpperBodyBlend", 1, &"UpperBodyStateMachine", &"output", 0, &"UpperBodyBlend"]
 
-[node name="character" instance=ExtResource("1_agfs1")]
+[node name="character-legacy"]
 
 [node name="Armature" parent="." index="0"]
-transform = Transform3D(-0.00999998, -2.12541e-05, -1.16415e-12, 1.16415e-12, 2.71051e-22, -0.01, 2.12541e-05, -0.00999998, 2.55795e-15, -0.0063416, 0.00807092, 0.000586227)
+transform = Transform3D(-0.01, 8.74228e-10, -3.82137e-17, 0, -4.37114e-10, -0.01, -8.74228e-10, -0.01, 4.37114e-10, 0, 0, 0)
 
 [node name="Skeleton3D" parent="Armature" index="0"]
 bones/0/position = Vector3(2.65949, -1.94693, -47.2157)
@@ -237,7 +236,7 @@ visible = false
 
 [node name="AnimationPlayer" parent="." index="1"]
 libraries = {
-&"humanoid-library": ExtResource("2_rkhd4")
+&"humanoid-library": ExtResource("3_j4xnk")
 }
 
 [node name="AnimationTree" type="AnimationTree" parent="." index="2"]
