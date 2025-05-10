@@ -78,12 +78,6 @@ public partial class Player : CharacterBody3D
   [Export]
   private int freeLookMaxAngle = 55;
 
-  [Export]
-  public string locomotionBlendPath { get; set; }
-
-  [Export]
-  public float transitionSpeed { get; set; } = 0.1f;
-
   private const float MAX_STEP_HEIGHT = 0.5f;
 
   private CollisionShape3D standingCollisionShape;
@@ -102,17 +96,28 @@ public partial class Player : CharacterBody3D
   private bool rightFoot = true;
   private AudioStreamRandomizer walkSoundRandomizer;
   private AudioStreamRandomizer crouchWalkSoundRandomizer;
+  private AnimationNodeStateMachinePlayback locomotionPlayback;
 
   // Animations
   private AnimationPlayer cameraAnimationPlayer;
   private AnimationTree characterAnimationTree { get; set; }
 
+  [Export]
+  public float transitionSpeed { get; set; } = 0.1f;
+
+  [Export]
+  public string locomotionBlendPath { get; set; }
+
+  [Export]
+  public string locomotionStatePlaybackPath { get; set; }
+
+  [Export]
   private GodotObject lineDrawer;
 
   private float lastHeadBobbingYValue = 0.0f;
 
-  // Add this field to track sprint state
   private bool isCurrentlySprinting = false;
+  private bool isFalling = false;
 
   private void DebugRayCast(RayCast3D rayCast, int time = 5)
   {
@@ -210,6 +215,7 @@ public partial class Player : CharacterBody3D
     }
 
     SetCharPose(CharacterPose.Standing);
+    locomotionPlayback.Travel("Jump");
     Velocity = Velocity with { Y = jumpVelocity };
 
     if (!isFreeLooking)
@@ -329,6 +335,7 @@ public partial class Player : CharacterBody3D
         currentSpeed = sprintSpeed;
         headBobbingCurrentIntensity = HeadBobbingIntensity.Sprint;
         headBobbingIndex += HeadBobbingSpeed.Sprint * delta;
+        locomotionPlayback.Travel("StandingRun");
 
         break;
     }
@@ -351,6 +358,7 @@ public partial class Player : CharacterBody3D
         break;
 
       case CharacterPose.Standing:
+        locomotionPlayback.Travel("StandingLocomotion");
         currentSpeed = walkSpeed;
         headBobbingCurrentIntensity = HeadBobbingIntensity.Walk;
         headBobbingIndex += HeadBobbingSpeed.Walk * delta;
@@ -508,6 +516,12 @@ public partial class Player : CharacterBody3D
   {
     if (IsOnFloor())
     {
+      if (isFalling)
+      {
+        isFalling = false;
+        locomotionPlayback.Travel("StandingLocomotion");
+      }
+
       isCurrentlySprinting = isCurrentlySprinting
         ? CanContinueSprint()
         : CanStartSprint();
@@ -539,6 +553,12 @@ public partial class Player : CharacterBody3D
     {
       isCurrentlySprinting = false;
       AddGravity(delta);
+      isFalling = true;
+
+      if (lastVelocity.Y < -2.0f && !isFreeLooking)
+      {
+        locomotionPlayback.Travel("Falling");
+      }
     }
   }
 
@@ -582,6 +602,7 @@ public partial class Player : CharacterBody3D
     if (lastVelocity.Y < -2.0f && !isFreeLooking)
     {
       cameraAnimationPlayer.Play("land");
+      locomotionPlayback.Travel("Land");
     }
   }
 
@@ -722,6 +743,8 @@ public partial class Player : CharacterBody3D
     stairsRayCastBelow = GetNode<RayCast3D>("stairs_ray_cast_below");
     cameraAnimationPlayer = eyes.GetNode<AnimationPlayer>("AnimationPlayer");
     characterAnimationTree = GetNode<AnimationTree>("Character/AnimationTree");
+    locomotionPlayback = (AnimationNodeStateMachinePlayback)
+      characterAnimationTree.Get(locomotionStatePlaybackPath);
 
     // Footstep sound setup
     footstepsAudioPlayer = GetNode<AudioStreamPlayer3D>("FootstepsAudioPlayer");
